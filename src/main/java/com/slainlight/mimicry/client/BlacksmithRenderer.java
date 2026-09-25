@@ -30,14 +30,7 @@ public class BlacksmithRenderer extends HumanoidMobRenderer<BlacksmithEntity, /*
 		super(context, new HumanoidModel<>(context.bakeLayer(KnightRenderer.NPC_LAYER), RenderTypes::entityTranslucent), 0.5F);
 		//?} else {
 		/*super(context, new PlayerModel<>(context.bakeLayer(KnightRenderer.NPC_LAYER), false), 0.5F);
-		this.addLayer(new ItemInHandLayer<>(this, context.getItemInHandRenderer()) {
-			@Override
-			public void render(PoseStack poseStack, MultiBufferSource buffers, int light, BlacksmithEntity smith, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-				if (!smith.hasPose(Pose.SLEEPING)) {
-					this.renderArmWithItem(smith, BlacksmithRenderer.this.hammer(), ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, buffers, light);
-				}
-			}
-		});
+		this.addLayer(new HammerLayer(context));
 		*///?}
 	}
 
@@ -70,6 +63,20 @@ public class BlacksmithRenderer extends HumanoidMobRenderer<BlacksmithEntity, /*
 			this.hammer = new ItemStack(Items.IRON_AXE);
 		}
 		return this.hammer;
+	}
+
+	// not anonymous: some javac versions give an anonymous subclass the superclass's constructor parameter names, which clash in the 1.20.1 jar
+	private final class HammerLayer extends ItemInHandLayer<BlacksmithEntity, PlayerModel<BlacksmithEntity>> {
+		HammerLayer(EntityRendererProvider.Context context) {
+			super(BlacksmithRenderer.this, context.getItemInHandRenderer());
+		}
+
+		@Override
+		public void render(PoseStack poseStack, MultiBufferSource buffers, int light, BlacksmithEntity smith, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+			if (!smith.hasPose(Pose.SLEEPING)) {
+				this.renderArmWithItem(smith, BlacksmithRenderer.this.hammer(), ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, HumanoidArm.RIGHT, poseStack, buffers, light);
+			}
+		}
 	}
 	*///?}
 }
