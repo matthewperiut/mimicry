@@ -1,0 +1,52 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "translate": "dialog.mimicry.bram.title"
+  },
+  "body": [
+    {
+      "type": "minecraft:item",
+      "item": {
+        "id": "mimicry:knight_sigil",
+        "count": 3
+      },
+      "description": {
+        "contents": {
+          "translate": "dialog.mimicry.bram.sigils"
+        },
+        "width": 230
+      },
+      "show_tooltip": true
+    }
+  ],
+  "actions": [
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.turnin"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "mimicry bram turnin"
+      }
+    },
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.trade"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "mimicry bram trade"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "translate": "dialog.mimicry.bram.farewell"
+    }
+  },
+  "columns": 1,
+  "pause": false,
+  "can_close_with_escape": true
+}

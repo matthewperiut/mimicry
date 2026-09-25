@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "mimicry:block/sunstone_lantern"
+    },
+    "hanging=true": {
+      "model": "mimicry:block/sunstone_lantern_hanging"
+    }
+  }
+}

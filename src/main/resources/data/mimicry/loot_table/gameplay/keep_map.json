@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:filled_map",
+          "modifier": [
+            {
+              "type": "minecraft:exploration_map",
+              "decoration": "minecraft:red_x",
+              "destination": "#mimicry:on_keep_maps",
+              "skip_existing_chunks": false,
+              "zoom": 2,
+              "search_radius": 100
+            },
+            {
+              "type": "minecraft:set_name",
+              "name": {
+                "translate": "item.mimicry.keep_map"
+              },
+              "target": "item_name"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

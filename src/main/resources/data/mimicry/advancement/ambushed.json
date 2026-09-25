@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:adventure/root",
+  "criteria": {
+    "bitten": {
+      "trigger": "minecraft:entity_hurt_player",
+      "conditions": {
+        "damage": {
+          "source_entity": {
+            "minecraft:entity_type": "mimicry:mimic"
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "minecraft:chest"
+    },
+    "title": {
+      "translate": "advancements.mimicry.ambushed.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.ambushed.description"
+    }
+  },
+  "requirements": [
+    [
+      "bitten"
+    ]
+  ]
+}

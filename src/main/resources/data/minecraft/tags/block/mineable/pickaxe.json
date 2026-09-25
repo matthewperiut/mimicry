@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "mimicry:sunstone_cluster",
+    "mimicry:sunstone_lantern",
+    "mimicry:sunstone_chain",
+    "mimicry:brick_chimney",
+    "mimicry:stone_brick_chimney"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "parent": "mimicry:ambushed",
+  "criteria": {
+    "has_lens": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "mimicry:treasure_lens"
+          }
+        ]
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "mimicry:treasure_lens"
+    },
+    "title": {
+      "translate": "advancements.mimicry.lens.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.lens.description"
+    }
+  },
+  "requirements": [
+    [
+      "has_lens"
+    ]
+  ]
+}

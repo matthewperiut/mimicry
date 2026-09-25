@@ -1,0 +1,118 @@
+{
+  "entity.mimic.chomp": {
+    "sounds": [
+      "mimicry:mimic/chomp1",
+      "mimicry:mimic/chomp2",
+      "mimicry:mimic/chomp3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.chomp"
+  },
+  "entity.mimic.growl": {
+    "sounds": [
+      "mimicry:mimic/growl1",
+      "mimicry:mimic/growl2",
+      "mimicry:mimic/growl3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.growl"
+  },
+  "entity.mimic.happy": {
+    "sounds": [
+      "mimicry:mimic/happy1",
+      "mimicry:mimic/happy2",
+      "mimicry:mimic/happy3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.happy"
+  },
+  "entity.mimic.hurt": {
+    "sounds": [
+      "mimicry:mimic/hurt1",
+      "mimicry:mimic/hurt2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.hurt"
+  },
+  "entity.mimic.death": {
+    "sounds": [
+      "mimicry:mimic/death"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.death"
+  },
+  "entity.mimic.reveal": {
+    "sounds": [
+      "mimicry:mimic/reveal"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.reveal"
+  },
+  "entity.mimic.gulp": {
+    "sounds": [
+      "mimicry:mimic/gulp1",
+      "mimicry:mimic/gulp2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.gulp"
+  },
+  "entity.mimic.burp": {
+    "sounds": [
+      "mimicry:mimic/burp1",
+      "mimicry:mimic/burp2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.burp"
+  },
+  "entity.mimic.hop": {
+    "sounds": [
+      "mimicry:mimic/hop1",
+      "mimicry:mimic/hop2",
+      "mimicry:mimic/hop3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.hop"
+  },
+  "entity.mimic.breathe": {
+    "sounds": [
+      "mimicry:mimic/breathe1",
+      "mimicry:mimic/breathe2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.mimic.breathe"
+  },
+  "entity.moss_knight.step": {
+    "sounds": [
+      "mimicry:moss_knight/step1",
+      "mimicry:moss_knight/step2",
+      "mimicry:moss_knight/step3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.step"
+  },
+  "entity.moss_knight.windup": {
+    "sounds": [
+      "mimicry:moss_knight/windup1",
+      "mimicry:moss_knight/windup2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.windup"
+  },
+  "entity.moss_knight.swing": {
+    "sounds": [
+      "mimicry:moss_knight/swing1",
+      "mimicry:moss_knight/swing2"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.swing"
+  },
+  "entity.moss_knight.hurt": {
+    "sounds": [
+      "mimicry:moss_knight/hurt1",
+      "mimicry:moss_knight/hurt2",
+      "mimicry:moss_knight/hurt3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.hurt"
+  },
+  "entity.moss_knight.death": {
+    "sounds": [
+      "mimicry:moss_knight/death"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.death"
+  },
+  "entity.moss_knight.ambient": {
+    "sounds": [
+      "mimicry:moss_knight/ambient1",
+      "mimicry:moss_knight/ambient2",
+      "mimicry:moss_knight/ambient3"
+    ],
+    "subtitle": "subtitles.mimicry.entity.moss_knight.ambient"
+  }
+}

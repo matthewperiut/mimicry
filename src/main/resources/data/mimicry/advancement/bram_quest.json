@@ -1,0 +1,25 @@
+{
+  "parent": "mimicry:slay_knight",
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "minecraft:shield"
+    },
+    "title": {
+      "translate": "advancements.mimicry.bram_quest.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.bram_quest.description"
+    },
+    "frame": "challenge"
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ]
+}

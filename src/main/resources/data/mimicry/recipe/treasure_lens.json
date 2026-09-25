@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "P": "minecraft:glass_pane",
+    "T": "mimicry:mimic_tooth"
+  },
+  "pattern": [
+    " G ",
+    "GPG",
+    " GT"
+  ],
+  "result": {
+    "id": "mimicry:treasure_lens"
+  }
+}

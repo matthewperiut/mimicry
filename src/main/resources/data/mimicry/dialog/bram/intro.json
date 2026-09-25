@@ -1,0 +1,52 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "translate": "dialog.mimicry.bram.title"
+  },
+  "body": [
+    {
+      "type": "minecraft:item",
+      "item": {
+        "id": "minecraft:mace",
+        "count": 1
+      },
+      "description": {
+        "contents": {
+          "translate": "dialog.mimicry.bram.intro"
+        },
+        "width": 230
+      },
+      "show_tooltip": true
+    }
+  ],
+  "actions": [
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.ask_keep"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "mimicry:bram/lore"
+      }
+    },
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.trade"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "mimicry bram trade"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "translate": "dialog.mimicry.bram.farewell"
+    }
+  },
+  "columns": 1,
+  "pause": false,
+  "can_close_with_escape": true
+}

@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "translate": "dialog.mimicry.bram.title"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "translate": "dialog.mimicry.bram.lore.2"
+      },
+      "width": 260
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "translate": "dialog.mimicry.bram.reminder"
+      },
+      "width": 260
+    }
+  ],
+  "actions": [
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.back"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "mimicry:bram/waiting"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "translate": "dialog.mimicry.bram.farewell"
+    }
+  },
+  "columns": 1,
+  "pause": false,
+  "can_close_with_escape": true
+}

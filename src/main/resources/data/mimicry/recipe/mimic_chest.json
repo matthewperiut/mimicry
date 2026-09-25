@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:chest",
+    "mimicry:mimic_tooth",
+    "mimicry:mimic_tooth",
+    "minecraft:gold_block"
+  ],
+  "result": {
+    "id": "mimicry:mimic_chest"
+  }
+}

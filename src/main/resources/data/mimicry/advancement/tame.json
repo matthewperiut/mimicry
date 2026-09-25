@@ -1,0 +1,34 @@
+{
+  "parent": "mimicry:ambushed",
+  "criteria": {
+    "tamed_mimic": {
+      "trigger": "minecraft:tame_animal",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "minecraft:entity_type": "mimicry:mimic"
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "minecraft:gold_ingot"
+    },
+    "title": {
+      "translate": "advancements.mimicry.tame.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.tame.description"
+    },
+    "frame": "goal"
+  },
+  "requirements": [
+    [
+      "tamed_mimic"
+    ]
+  ]
+}

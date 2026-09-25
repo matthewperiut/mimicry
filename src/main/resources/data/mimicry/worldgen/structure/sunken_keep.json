@@ -1,0 +1,32 @@
+{
+  "type": "mimicry:sunken_keep",
+  "biomes": "#mimicry:has_structure/sunken_keep",
+  "step": "top_layer_modification",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "piece",
+      "spawns": [
+        {
+          "type": "mimicry:moss_knight",
+          "weight": 1,
+          "count": 1
+        },
+        {
+          "type": "minecraft:zombie",
+          "weight": 3,
+          "count": 1
+        },
+        {
+          "type": "minecraft:skeleton",
+          "weight": 3,
+          "count": 1
+        },
+        {
+          "type": "minecraft:spider",
+          "weight": 2,
+          "count": 1
+        }
+      ]
+    }
+  }
+}

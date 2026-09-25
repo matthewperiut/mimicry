@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:iron_chain",
+    "minecraft:iron_chain",
+    "minecraft:iron_chain",
+    "minecraft:iron_chain",
+    "mimicry:sunstone_shard"
+  ],
+  "result": {
+    "id": "mimicry:sunstone_chain",
+    "count": 4
+  }
+}

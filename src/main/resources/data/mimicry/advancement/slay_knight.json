@@ -1,0 +1,33 @@
+{
+  "parent": "mimicry:enter_keep",
+  "criteria": {
+    "slain": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "minecraft:entity_type": "mimicry:moss_knight"
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "mimicry:knight_sigil"
+    },
+    "title": {
+      "translate": "advancements.mimicry.slay_knight.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.slay_knight.description"
+    }
+  },
+  "requirements": [
+    [
+      "slain"
+    ]
+  ]
+}

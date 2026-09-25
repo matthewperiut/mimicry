@@ -1,0 +1,6 @@
+{
+  "type": "mimicry:wayside_forge",
+  "biomes": "#mimicry:has_structure/wayside_forge",
+  "step": "surface_structures",
+  "spawn_overrides": {}
+}

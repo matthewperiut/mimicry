@@ -1,0 +1,35 @@
+{
+  "parent": "mimicry:ambushed",
+  "criteria": {
+    "entered": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "type": "minecraft:entity_properties",
+          "entity": "this",
+          "predicate": {
+            "minecraft:location": {
+              "structures": "mimicry:sunken_keep"
+            }
+          }
+        }
+      }
+    }
+  },
+  "display": {
+    "icon": {
+      "id": "mimicry:sunstone_cluster"
+    },
+    "title": {
+      "translate": "advancements.mimicry.enter_keep.title"
+    },
+    "description": {
+      "translate": "advancements.mimicry.enter_keep.description"
+    }
+  },
+  "requirements": [
+    [
+      "entered"
+    ]
+  ]
+}

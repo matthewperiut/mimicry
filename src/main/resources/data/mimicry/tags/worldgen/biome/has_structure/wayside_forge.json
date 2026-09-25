@@ -1,0 +1,10 @@
+{
+  "values": [
+    "#mimicry:has_structure/sunken_keep",
+    "minecraft:river",
+    "minecraft:frozen_river",
+    "minecraft:beach",
+    "minecraft:snowy_beach",
+    "minecraft:stony_shore"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "mimicry",
+	"version": "${version}",
+	"name": "Mimicry",
+	"description": "Some loot chests have teeth. Tame them with gold and they'll follow you around as a hungry, hopping backpack.",
+	"authors": [
+		"Slainlight"
+	],
+	"contact": {
+		"sources": "https://github.com/matthewperiut/mimicry"
+	},
+	"license": "MIT",
+	"icon": "assets/mimicry/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.slainlight.mimicry.Mimicry"
+		],
+		"client": [
+			"com.slainlight.mimicry.client.MimicryClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"mixins": [
+		"mimicry.mixins.json"
+	]
+}

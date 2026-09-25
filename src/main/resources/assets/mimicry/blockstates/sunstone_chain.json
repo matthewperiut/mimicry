@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "mimicry:block/sunstone_chain",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "mimicry:block/sunstone_chain"
+    },
+    "axis=z": {
+      "model": "mimicry:block/sunstone_chain",
+      "x": 90
+    }
+  }
+}

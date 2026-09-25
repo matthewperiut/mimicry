@@ -1,0 +1,77 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:shield",
+          "modifier": [
+            {
+              "type": "minecraft:set_components",
+              "components": {
+                "minecraft:base_color": "green",
+                "minecraft:banner_patterns": [
+                  {
+                    "pattern": "minecraft:rhombus",
+                    "color": "yellow"
+                  },
+                  {
+                    "pattern": "minecraft:circle",
+                    "color": "green"
+                  },
+                  {
+                    "pattern": "minecraft:border",
+                    "color": "black"
+                  },
+                  {
+                    "pattern": "minecraft:curly_border",
+                    "color": "yellow"
+                  }
+                ],
+                "minecraft:item_name": {
+                  "translate": "item.mimicry.hollowmere_shield"
+                },
+                "minecraft:rarity": "rare",
+                "minecraft:enchantments": {
+                  "minecraft:unbreaking": 3
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:emerald",
+          "modifier": [
+            {
+              "type": "minecraft:set_count",
+              "count": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "mimicry:sunstone_lantern",
+          "modifier": [
+            {
+              "type": "minecraft:set_count",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

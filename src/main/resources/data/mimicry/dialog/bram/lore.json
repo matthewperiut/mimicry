@@ -1,0 +1,52 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "translate": "dialog.mimicry.bram.title"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "translate": "dialog.mimicry.bram.lore.1"
+      },
+      "width": 260
+    },
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "translate": "dialog.mimicry.bram.lore.2"
+      },
+      "width": 260
+    }
+  ],
+  "actions": [
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.accept"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "mimicry bram accept"
+      }
+    },
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.back"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "mimicry:bram/intro"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "translate": "dialog.mimicry.bram.farewell"
+    }
+  },
+  "columns": 1,
+  "pause": false,
+  "can_close_with_escape": true
+}

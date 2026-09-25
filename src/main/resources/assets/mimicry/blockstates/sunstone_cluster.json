@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "mimicry:block/sunstone_cluster",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "mimicry:block/sunstone_cluster",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "mimicry:block/sunstone_cluster",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "mimicry:block/sunstone_cluster",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "mimicry:block/sunstone_cluster"
+    },
+    "facing=west": {
+      "model": "mimicry:block/sunstone_cluster",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

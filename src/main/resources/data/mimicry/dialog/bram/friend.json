@@ -1,0 +1,42 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "translate": "dialog.mimicry.bram.title"
+  },
+  "body": [
+    {
+      "type": "minecraft:item",
+      "item": {
+        "id": "minecraft:shield",
+        "count": 1
+      },
+      "description": {
+        "contents": {
+          "translate": "dialog.mimicry.bram.friend"
+        },
+        "width": 230
+      },
+      "show_tooltip": true
+    }
+  ],
+  "actions": [
+    {
+      "label": {
+        "translate": "dialog.mimicry.bram.trade"
+      },
+      "width": 220,
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "mimicry bram trade"
+      }
+    }
+  ],
+  "exit_action": {
+    "label": {
+      "translate": "dialog.mimicry.bram.farewell"
+    }
+  },
+  "columns": 1,
+  "pause": false,
+  "can_close_with_escape": true
+}
