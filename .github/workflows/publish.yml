@@ -2,6 +2,12 @@ name: publish
 on:
   release:
     types: [published]
+  # to finish a release that stopped partway: run it on the release's tag, skipping what's already out
+  workflow_dispatch:
+    inputs:
+      skip:
+        description: Jars already published, like "fabric-1.20.1 forge-1.20.1"
+        required: false
 
 jobs:
   build:
@@ -40,6 +46,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       VERSION: ${{ needs.build.outputs.version }}
+      SKIP: ${{ inputs.skip }}
       MODRINTH_ID: ${{ vars.MODRINTH_ID }}
       MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
       CURSEFORGE_ID: ${{ vars.CURSEFORGE_ID }}
@@ -57,6 +64,15 @@ jobs:
           path: .mc-publish
       - name: point it at slainlight.com
         run: sed -i 's#https://api.modrinth.com/v#https://slainlight.com/v#' .mc-publish/dist/index.js
+      - name: get the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "CHANGELOG<<END_OF_NOTES"
+            gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json body --jq .body
+            echo "END_OF_NOTES"
+          } >> "$GITHUB_ENV"
       - name: get the jars
         uses: actions/download-artifact@v8
         with:
@@ -71,10 +87,10 @@ jobs:
         with: { minecraft: '1.20.1', loader: forge, loaders: forge neoforge, java: 17 }
       - name: Fabric 1.21.1
         uses: ./.github/actions/publish
-        with: { minecraft: '1.21.1', loader: fabric, game-versions: '1.21 1.21.1', java: 21 }
+        with: { minecraft: '1.21.1', loader: fabric, game-versions: "1.21\n1.21.1", java: 21 }
       - name: NeoForge 1.21.1
         uses: ./.github/actions/publish
-        with: { minecraft: '1.21.1', loader: neoforge, game-versions: '1.21 1.21.1', java: 21 }
+        with: { minecraft: '1.21.1', loader: neoforge, game-versions: "1.21\n1.21.1", java: 21 }
       - name: Fabric 26.1.2
         uses: ./.github/actions/publish
         with: { minecraft: '26.1.2', loader: fabric, java: 25 }

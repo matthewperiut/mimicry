@@ -11,7 +11,7 @@ inputs:
     description: Loaders to list it under, if more than the jar's own
     required: false
   game-versions:
-    description: Minecraft versions to list it under, if more than the one in its name
+    description: Minecraft versions to list it under, one per line, if more than the one in its name
     required: false
   java:
     description: The Java version it needs
@@ -33,8 +33,13 @@ runs:
         echo "file=jars/mimicry-$LOADER-$VERSION+$MINECRAFT.jar" >> "$GITHUB_OUTPUT"
         echo "name=Mimicry $VERSION for $label $MINECRAFT" >> "$GITHUB_OUTPUT"
         echo "version=$VERSION+$MINECRAFT-$LOADER" >> "$GITHUB_OUTPUT"
+        if [[ " $SKIP " == *" $LOADER-$MINECRAFT "* ]]; then
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          echo "Skipping $LOADER-$MINECRAFT, already published"
+        fi
 
     - uses: Kira-NT/mc-publish@v3.3
+      if: steps.jar.outputs.skip != 'true'
       with:
         modrinth-id: ${{ env.MODRINTH_ID }}
         modrinth-token: ${{ env.MODRINTH_TOKEN }}
@@ -43,18 +48,21 @@ runs:
         files: ${{ steps.jar.outputs.file }}
         name: ${{ steps.jar.outputs.name }}
         version: ${{ steps.jar.outputs.version }}
+        changelog: ${{ env.CHANGELOG }}
         loaders: ${{ inputs.loaders || inputs.loader }}
         game-versions: ${{ inputs.game-versions || inputs.minecraft }}
         java: ${{ inputs.java }}
 
     # the copy of mc-publish the workflow pointed at slainlight.com
     - uses: ./.mc-publish
+      if: steps.jar.outputs.skip != 'true'
       with:
         modrinth-id: ${{ env.SLAINLIGHT_ID }}
         modrinth-token: ${{ env.SLAINLIGHT_TOKEN }}
         files: ${{ steps.jar.outputs.file }}
         name: ${{ steps.jar.outputs.name }}
         version: ${{ steps.jar.outputs.version }}
+        changelog: ${{ env.CHANGELOG }}
         loaders: ${{ inputs.loaders || inputs.loader }}
         game-versions: ${{ inputs.game-versions || inputs.minecraft }}
         java: ${{ inputs.java }}
