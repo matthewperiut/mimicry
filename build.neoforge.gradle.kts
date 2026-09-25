@@ -13,6 +13,10 @@ base.archivesName = "${property("mod.id") as String}-neoforge"
 
 repositories {
     mavenCentral()
+    // Fletching Table puts Kikugie's repositories first; keep them to its own artifacts so a timeout there can't fail the rest
+    matching { it.name.startsWith("KikuGie") }.configureEach {
+        (this as MavenArtifactRepository).content { includeGroupAndSubgroups("dev.kikugie") }
+    }
 }
 
 val requiredJava = when {
