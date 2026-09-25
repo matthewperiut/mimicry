@@ -1,12 +1,17 @@
 package com.slainlight.mimicry;
 
+//? if >=1.20.5 {
 import com.mojang.serialization.MapCodec;
+//?} else {
+/*import com.mojang.serialization.Codec;
+*///?}
 import java.util.Arrays;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
@@ -38,12 +43,11 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnorePr
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.minecraft.world.phys.Vec3;
 
 // uses SunkenKeep's placement grid and re-plans the keep for the same start chunk; sites are 80-104 blocks from the
 // portal so the forge and its grounds stay within 8 chunks of the start chunk
 public class WaysideForge extends Structure {
-	public static final MapCodec<WaysideForge> CODEC = simpleCodec(WaysideForge::new);
+	public static final /*? if >=1.20.5 {*/MapCodec/*?} else {*//*Codec*//*?}*/<WaysideForge> CODEC = simpleCodec(WaysideForge::new);
 	static final Identifier TEMPLATE = Mimicry.id("wayside_forge");
 	// template is 23x19x21 with the gate at z = 0; rotates about its center
 	private static final BlockPos PIVOT = new BlockPos(11, 0, 10);
@@ -106,10 +110,17 @@ public class WaysideForge extends Structure {
 		return best;
 	}
 
+	private static Holder<Biome> biome(GenerationContext context, int x, int y, int z) {
+		//? if >=26.3 {
+		return context.biomeResolver().getNoiseBiome(QuartPos.fromBlock(x), QuartPos.fromBlock(y), QuartPos.fromBlock(z));
+		//?} else {
+		/*return context.biomeSource().getNoiseBiome(QuartPos.fromBlock(x), QuartPos.fromBlock(y), QuartPos.fromBlock(z), context.randomState().sampler());
+		*///?}
+	}
+
 	private static boolean keepBelongsHere(GenerationContext context, BlockPos portal) {
-		Holder<Biome> biome = context.biomeResolver().getNoiseBiome(QuartPos.fromBlock(portal.getX()), QuartPos.fromBlock(portal.getY()),
-			QuartPos.fromBlock(portal.getZ()));
-		return context.registryAccess().lookupOrThrow(Registries.STRUCTURE).getOptional(Mimicry.id("sunken_keep"))
+		Holder<Biome> biome = biome(context, portal.getX(), portal.getY(), portal.getZ());
+		return context.registryAccess()./*? if >=1.21.2 {*/lookupOrThrow/*?} else {*//*registryOrThrow*//*?}*/(Registries.STRUCTURE).getOptional(Mimicry.id("sunken_keep"))
 			.map(keep -> keep.biomes().contains(biome)).orElse(false);
 	}
 
@@ -132,7 +143,7 @@ public class WaysideForge extends Structure {
 		if (floor - ground[0] > MAX_FILL || ground[24] - floor > MAX_CUT) {
 			return null;
 		}
-		Holder<Biome> biome = context.biomeResolver().getNoiseBiome(QuartPos.fromBlock(x), QuartPos.fromBlock(floor), QuartPos.fromBlock(z));
+		Holder<Biome> biome = biome(context, x, floor, z);
 		if (!context.validBiome().test(biome)) {
 			return null;
 		}
@@ -149,7 +160,7 @@ public class WaysideForge extends Structure {
 		}
 
 		public Piece(StructureTemplateManager templates, CompoundTag tag) {
-			super(Hollowmere.FORGE, tag, templates, id -> settings(Rotation.valueOf(tag.getStringOr("Rot", "NONE"))));
+			super(Hollowmere.FORGE, tag, templates, id -> settings(Rotation.valueOf(tag./*? if >=1.21.5 {*/getStringOr("Rot", "NONE")/*?} else {*//*getString("Rot")*//*?}*/)));
 		}
 
 		private static StructurePlaceSettings settings(Rotation rotation) {
@@ -199,7 +210,7 @@ public class WaysideForge extends Structure {
 		}
 
 		private static BlockState yardGround(BlockState natural, BlockPos pos, boolean bare) {
-			if (natural.is(Blocks.PODZOL) || natural.is(Blocks.MYCELIUM) || natural.is(Blocks.MOSS_BLOCK) || natural.is(Blocks.PALE_MOSS_BLOCK)
+			if (natural.is(Blocks.PODZOL) || natural.is(Blocks.MYCELIUM) || natural.is(Blocks.MOSS_BLOCK)/*? if >=1.21.4 {*/ || natural.is(Blocks.PALE_MOSS_BLOCK)/*?}*/
 				|| natural.is(Blocks.COARSE_DIRT) || natural.is(Blocks.ROOTED_DIRT) || natural.is(Blocks.MUD)) {
 				return natural;
 			}
@@ -214,16 +225,16 @@ public class WaysideForge extends Structure {
 			if (!marker.equals("blacksmith") || !chunkBB.isInside(pos)) {
 				return;
 			}
-			BlacksmithEntity smith = Hollowmere.BLACKSMITH.create(level.getLevel(), EntitySpawnReason.STRUCTURE);
+			BlacksmithEntity smith = Hollowmere.BLACKSMITH.create(level.getLevel()/*? if >=1.21.2 {*/, EntitySpawnReason.STRUCTURE/*?}*/);
 			if (smith == null) {
 				return;
 			}
 			BlockPos anvil = this.find(Blocks.ANVIL).orElse(pos);
-			BlockPos bed = Blocks.BED.asList().stream().flatMap(block -> this.template.filterBlocks(this.templatePosition, this.placeSettings, block).stream())
+			BlockPos bed = BuiltInRegistries.BLOCK.stream().filter(BedBlock.class::isInstance).flatMap(block -> this.template.filterBlocks(this.templatePosition, this.placeSettings, block).stream())
 				.filter(info -> info.state().getValue(BedBlock.PART) == BedPart.HEAD).map(StructureTemplate.StructureBlockInfo::pos).findFirst().orElse(pos);
-			smith.snapTo(Vec3.atBottomCenterOf(pos), this.placeSettings.getRotation().rotate(Direction.NORTH).toYRot(), 0.0F);
+			smith./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos, this.placeSettings.getRotation().rotate(Direction.NORTH).toYRot(), 0.0F);
 			smith.settle(anvil, bed);
-			smith.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.STRUCTURE, null);
+			smith.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.STRUCTURE, null/*? if <1.20.5 {*//*, null*//*?}*/);
 			level.addFreshEntityWithPassengers(smith);
 		}
 
@@ -239,14 +250,19 @@ public class WaysideForge extends Structure {
 		private final BoundingBox footprint;
 
 		Grounds(BoundingBox forge) {
+			//? if >=1.20.5 {
 			super(Hollowmere.FORGE_GROUNDS, 0, forge.inflatedBy(REACH, 0, REACH).encapsulate(
 				new BoundingBox(forge.minX(), forge.minY() - MAX_FILL - 8, forge.minZ(), forge.maxX(), forge.maxY() + MAX_CUT, forge.maxZ())));
+			//?} else {
+			/*super(Hollowmere.FORGE_GROUNDS, 0, new BoundingBox(forge.minX() - REACH, forge.minY() - MAX_FILL - 8, forge.minZ() - REACH,
+				forge.maxX() + REACH, forge.maxY() + MAX_CUT, forge.maxZ() + REACH));
+			*///?}
 			this.footprint = forge;
 		}
 
 		public Grounds(CompoundTag tag) {
 			super(Hollowmere.FORGE_GROUNDS, tag);
-			int[] box = tag.getIntArray("Footprint").orElse(new int[6]);
+			int[] box = tag.getIntArray("Footprint")/*? if >=1.21.5 {*/.orElse(new int[6])/*?}*/;
 			this.footprint = new BoundingBox(box[0], box[1], box[2], box[3], box[4], box[5]);
 		}
 

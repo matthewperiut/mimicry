@@ -2,7 +2,11 @@ package com.slainlight.mimicry.mixin;
 
 import com.slainlight.mimicry.PrimedChests;
 import net.minecraft.core.BlockPos;
+//? if >=1.20.5 {
 import net.minecraft.resources.ResourceKey;
+//?} else {
+/*import net.minecraft.resources.Identifier;
+*///?}
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,11 +27,15 @@ public abstract class StructurePieceMixin implements PrimedChests.PieceHook {
 	private boolean mimicry$companionPlaced;
 
 	@Inject(
+		//? if >=1.20.5 {
 		method = "createChest(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/world/level/levelgen/structure/BoundingBox;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/world/level/block/state/BlockState;)Z",
+		//?} else {
+		/*method = "createChest(Lnet/minecraft/world/level/ServerLevelAccessor;Lnet/minecraft/world/level/levelgen/structure/BoundingBox;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;Lnet/minecraft/resources/Identifier;Lnet/minecraft/world/level/block/state/BlockState;)Z",
+		*///?}
 		at = @At("RETURN")
 	)
 	private void mimicry$addCompanion(
-		ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, ResourceKey<LootTable> lootTable, @Nullable BlockState state,
+		ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable, @Nullable BlockState state,
 		CallbackInfoReturnable<Boolean> cir
 	) {
 		if (cir.getReturnValueZ()) {
@@ -36,7 +44,7 @@ public abstract class StructurePieceMixin implements PrimedChests.PieceHook {
 	}
 
 	@Override
-	public void mimicry$onLootChest(ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, ResourceKey<LootTable> lootTable) {
+	public void mimicry$onLootChest(ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable) {
 		if (!this.mimicry$companionPlaced) {
 			BoundingBox pieceBB = ((StructurePiece) (Object) this).getBoundingBox();
 			this.mimicry$companionPlaced = PrimedChests.placeCompanion(level, random, pos, lootTable, PrimedChests.insetBy1(chunkBB).and(pieceBB::isInside));

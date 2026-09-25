@@ -6,7 +6,11 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+//? if >=1.21.2 {
 import net.minecraft.world.level.ScheduledTickAccess;
+//?} else {
+/*import net.minecraft.world.level.LevelAccessor;
+*///?}
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
@@ -38,8 +42,12 @@ public class ChimneyBlock extends Block implements EntityBlock {
 	}
 
 	@Override
+	//? if >=1.21.2 {
 	protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighbourPos,
 		BlockState neighbour, RandomSource random) {
+	//?} else {
+	/*public BlockState updateShape(BlockState state, Direction direction, BlockState neighbour, LevelAccessor level, BlockPos pos, BlockPos neighbourPos) {
+	*///?}
 		return direction == Direction.DOWN ? state.setValue(SIGNAL_FIRE, neighbour.is(Blocks.HAY_BLOCK)) : state;
 	}
 

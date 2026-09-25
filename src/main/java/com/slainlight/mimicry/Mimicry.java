@@ -1,18 +1,26 @@
 package com.slainlight.mimicry;
 
+//? if >=26.1 {
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.serialization.Codec;
+//?}
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleBuilder;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+//? if fabric && <26.1 {
+/*import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
+*///?}
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+//? if >=1.20.5 {
 import net.minecraft.core.component.DataComponents;
+//?}
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+//? if <1.20.5 {
+/*import net.minecraft.nbt.CompoundTag;
+*///?}
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -21,90 +29,143 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+//? if >=26.1 {
 import net.minecraft.world.entity.EntitySpawnReason;
+//?}
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.player.Player;
+//? if >=26.1 {
+import net.minecraft.world.flag.FeatureFlagSet;
+//?}
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SpawnEggItem;
+//? if >=1.20.5 {
 import net.minecraft.world.item.component.SeededContainerLoot;
+//?}
+//? if >=26.1 {
 import net.minecraft.world.item.component.TooltipDisplay;
+//?}
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
+//? if >=26.1 {
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleCategory;
+import net.minecraft.world.level.gamerules.GameRuleType;
+import net.minecraft.world.level.gamerules.GameRuleTypeVisitor;
+//?} else {
+/*import net.minecraft.world.level.GameRules;
+*///?}
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.level.storage.loot.LootTable;
+import org.jspecify.annotations.Nullable;
 
-public class Mimicry implements ModInitializer {
+public final class Mimicry {
 	public static final String MOD_ID = "mimicry";
 
-	public static final GameRule<Integer> MIMIC_CHANCE = GameRuleBuilder.forInteger(10).range(0, 100).category(GameRuleCategory.MOBS)
-		.buildAndRegister(id("mimic_chance"));
-	public static final GameRule<Integer> PRIMED_MIMIC_CHANCE = GameRuleBuilder.forInteger(90).range(0, 100).category(GameRuleCategory.MOBS)
-		.buildAndRegister(id("primed_mimic_chance"));
-	public static final ResourceKey<LootTable> MIMIC_CHEST_LOOT = ResourceKey.create(Registries.LOOT_TABLE, id("chests/mimic_chest"));
+	public static final /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ MIMIC_CHEST_LOOT =
+		/*? if >=1.20.5 {*/ResourceKey.create(Registries.LOOT_TABLE, id("chests/mimic_chest"))/*?} else {*//*id("chests/mimic_chest")*//*?}*/;
 	public static final TagKey<Item> MIMIC_FOOD = TagKey.create(Registries.ITEM, id("mimic_food"));
+	public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, id("mimicry"));
 
-	public static final SoundEvent MIMIC_CHOMP = sound("entity.mimic.chomp");
-	public static final SoundEvent MIMIC_GROWL = sound("entity.mimic.growl");
-	public static final SoundEvent MIMIC_HAPPY = sound("entity.mimic.happy");
-	public static final SoundEvent MIMIC_HURT = sound("entity.mimic.hurt");
-	public static final SoundEvent MIMIC_DEATH = sound("entity.mimic.death");
-	public static final SoundEvent MIMIC_REVEAL = sound("entity.mimic.reveal");
-	public static final SoundEvent MIMIC_GULP = sound("entity.mimic.gulp");
-	public static final SoundEvent MIMIC_BURP = sound("entity.mimic.burp");
-	public static final SoundEvent MIMIC_HOP = sound("entity.mimic.hop");
-	public static final SoundEvent MIMIC_BREATHE = sound("entity.mimic.breathe");
+	// in the order the game fills them, so later ones can use what earlier ones registered
+	public static final List<ResourceKey<? extends Registry<?>>> REGISTRIES = List.of(/*? if >=1.20.5 && <26.1 {*//*Registries.ARMOR_MATERIAL, *//*?}*/Registries.SOUND_EVENT,
+		Registries.BLOCK, Registries.ENTITY_TYPE, Registries.ITEM, Registries.BLOCK_ENTITY_TYPE, Registries.STRUCTURE_TYPE, Registries.STRUCTURE_PIECE
+		/*? if >=26.1 {*/, Registries.GAME_RULE/*?}*/);
 
-	private static final ResourceKey<EntityType<?>> MIMIC_KEY = ResourceKey.create(Registries.ENTITY_TYPE, id("mimic"));
-	public static final EntityType<MimicEntity> MIMIC = Registry.register(BuiltInRegistries.ENTITY_TYPE, MIMIC_KEY,
-		EntityType.Builder.of(MimicEntity::new, MobCategory.CREATURE).sized(0.6F, 0.875F).eyeHeight(0.6F).clientTrackingRange(10)
-			.updateInterval(1).build(MIMIC_KEY)); // update every tick so leaps render smoothly; zombie width so it fits through doors
+	//? if >=26.1 {
+	public static GameRule<Integer> MIMIC_CHANCE;
+	public static GameRule<Integer> PRIMED_MIMIC_CHANCE;
+	//?} else {
+	/*public static final GameRules.Key<GameRules.IntegerValue> MIMIC_CHANCE = percentRule("mimic_chance", 10);
+	public static final GameRules.Key<GameRules.IntegerValue> PRIMED_MIMIC_CHANCE = percentRule("primed_mimic_chance", 90);
+	*///?}
 
-	public static final Item MIMIC_TOOTH = item("mimic_tooth", Item::new, new Item.Properties());
-	public static final Item TREASURE_LENS = item("treasure_lens", TreasureLensItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
-	public static final Item MIMIC_CHEST = item("mimic_chest", properties -> new BlockItem(Blocks.CHEST, properties),
-		new Item.Properties().rarity(Rarity.UNCOMMON).component(DataComponents.CONTAINER_LOOT, new SeededContainerLoot(MIMIC_CHEST_LOOT, 0L))
-			.component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.CONTAINER_LOOT, true)));
-	public static final Item MIMIC_SPAWN_EGG = item("mimic_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(MIMIC));
+	public static SoundEvent MIMIC_CHOMP;
+	public static SoundEvent MIMIC_GROWL;
+	public static SoundEvent MIMIC_HAPPY;
+	public static SoundEvent MIMIC_HURT;
+	public static SoundEvent MIMIC_DEATH;
+	public static SoundEvent MIMIC_REVEAL;
+	public static SoundEvent MIMIC_GULP;
+	public static SoundEvent MIMIC_BURP;
+	public static SoundEvent MIMIC_HOP;
+	public static SoundEvent MIMIC_BREATHE;
 
-	@Override
-	public void onInitialize() {
-		FabricDefaultAttributeRegistry.register(MIMIC, MimicEntity.createAttributes());
-		Hollowmere.init();
+	public static EntityType<MimicEntity> MIMIC;
 
-		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
-			if (level instanceof ServerLevel serverLevel && !player.isSpectator() && springTrap(serverLevel, hit.getBlockPos(), player)) {
-				return InteractionResult.SUCCESS;
-			}
-			if (!player.isSpectator() && BlacksmithEntity.wakeInBed(player, level, hand, hit.getBlockPos())) {
-				return InteractionResult.SUCCESS;
-			}
-			return InteractionResult.PASS;
-		});
-		PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) ->
-			!(level instanceof ServerLevel serverLevel) || !springTrap(serverLevel, pos, player));
+	public static Item MIMIC_TOOTH;
+	public static Item TREASURE_LENS;
+	public static Item MIMIC_CHEST;
+	public static Item MIMIC_SPAWN_EGG;
 
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> output.accept(MIMIC_SPAWN_EGG));
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(output -> output.accept(MIMIC_TOOTH));
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(output -> {
-			output.accept(TREASURE_LENS);
-			output.accept(Hollowmere.ALMANAC_BOOK);
-		});
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(output -> output.insertAfter(Items.CHEST, MIMIC_CHEST));
-		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COMBAT).register(output -> output.insertAfter(Items.GOLDEN_HELMET, Hollowmere.CROWN));
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, id("mimicry"), FabricCreativeModeTab.builder()
-			.title(Component.translatable("itemGroup.mimicry"))
+	private Mimicry() {
+	}
+
+	public static void register(ResourceKey<? extends Registry<?>> registry) {
+		if (registry.equals(Registries.SOUND_EVENT)) {
+			MIMIC_CHOMP = sound("entity.mimic.chomp");
+			MIMIC_GROWL = sound("entity.mimic.growl");
+			MIMIC_HAPPY = sound("entity.mimic.happy");
+			MIMIC_HURT = sound("entity.mimic.hurt");
+			MIMIC_DEATH = sound("entity.mimic.death");
+			MIMIC_REVEAL = sound("entity.mimic.reveal");
+			MIMIC_GULP = sound("entity.mimic.gulp");
+			MIMIC_BURP = sound("entity.mimic.burp");
+			MIMIC_HOP = sound("entity.mimic.hop");
+			MIMIC_BREATHE = sound("entity.mimic.breathe");
+		} else if (registry.equals(Registries.ENTITY_TYPE)) {
+			ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id("mimic"));
+			// update every tick so leaps render smoothly; zombie width so it fits through doors
+			MIMIC = register(BuiltInRegistries.ENTITY_TYPE, key, EntityType.Builder.of(MimicEntity::new, MobCategory.CREATURE)
+				.sized(0.6F, 0.875F)/*? if >=1.20.5 {*/.eyeHeight(0.6F)/*?}*/.clientTrackingRange(10).updateInterval(1).build(/*? if >=26.1 {*/key/*?} else {*//*key.location().toString()*//*?}*/));
+		} else if (registry.equals(Registries.ITEM)) {
+			MIMIC_TOOTH = item("mimic_tooth", Item::new, new Item.Properties());
+			TREASURE_LENS = item("treasure_lens", TreasureLensItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
+			//? if >=1.20.5 {
+			MIMIC_CHEST = item("mimic_chest", properties -> new BlockItem(Blocks.CHEST, properties),
+				new Item.Properties().rarity(Rarity.UNCOMMON).component(DataComponents.CONTAINER_LOOT, new SeededContainerLoot(MIMIC_CHEST_LOOT, 0L))
+					/*? if >=26.1 {*/.component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.CONTAINER_LOOT, true))/*?}*/);
+			//?} else {
+			/*// no default item data here, so every stack without block entity data places a chest with the mimic loot table
+			MIMIC_CHEST = item("mimic_chest", properties -> new BlockItem(Blocks.CHEST, properties) {
+				@Override
+				protected boolean updateCustomBlockEntityTag(BlockPos pos, Level level, @Nullable Player player, ItemStack stack, BlockState state) {
+					if (getBlockEntityData(stack) == null && level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+						chest.setLootTable(MIMIC_CHEST_LOOT, 0L);
+					}
+					return super.updateCustomBlockEntityTag(pos, level, player, stack, state);
+				}
+			}, new Item.Properties().rarity(Rarity.UNCOMMON));
+			*///?}
+			MIMIC_SPAWN_EGG = spawnEgg("mimic_spawn_egg", MIMIC);
+		//? if >=26.1 {
+		} else if (registry.equals(Registries.GAME_RULE)) {
+			MIMIC_CHANCE = percentRule("mimic_chance", 10);
+			PRIMED_MIMIC_CHANCE = percentRule("primed_mimic_chance", 90);
+		//?}
+		}
+		Hollowmere.register(registry);
+	}
+
+	public static CreativeModeTab.Builder tab(CreativeModeTab.Builder builder) {
+		return builder.title(Component.translatable("itemGroup.mimicry"))
 			.icon(() -> new ItemStack(MIMIC_TOOTH))
 			.displayItems((parameters, output) -> {
 				output.accept(MIMIC_CHEST);
@@ -119,23 +180,73 @@ public class Mimicry implements ModInitializer {
 				output.accept(MIMIC_TOOTH);
 				output.accept(Hollowmere.ALMANAC_BOOK);
 				output.accept(Hollowmere.CROWN);
-			})
-			.build());
+			});
+	}
+
+	public interface TabEntries {
+		void add(ItemLike item);
+
+		void addAfter(ItemLike after, ItemLike item);
+	}
+
+	public static final List<ResourceKey<CreativeModeTab>> VANILLA_TABS = List.of(CreativeModeTabs.SPAWN_EGGS, CreativeModeTabs.INGREDIENTS,
+		CreativeModeTabs.TOOLS_AND_UTILITIES, CreativeModeTabs.FUNCTIONAL_BLOCKS, CreativeModeTabs.COMBAT, CreativeModeTabs.NATURAL_BLOCKS);
+
+	public static void fillVanillaTab(ResourceKey<CreativeModeTab> tab, TabEntries entries) {
+		if (tab.equals(CreativeModeTabs.SPAWN_EGGS)) {
+			entries.add(MIMIC_SPAWN_EGG);
+			entries.add(Hollowmere.MOSS_KNIGHT_SPAWN_EGG);
+			entries.add(Hollowmere.BLACKSMITH_SPAWN_EGG);
+		} else if (tab.equals(CreativeModeTabs.INGREDIENTS)) {
+			entries.add(MIMIC_TOOTH);
+			entries.addAfter(Items.AMETHYST_SHARD, Hollowmere.SUNSTONE_SHARD);
+			entries.add(Hollowmere.KNIGHT_SIGIL);
+		} else if (tab.equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+			entries.add(TREASURE_LENS);
+			entries.add(Hollowmere.ALMANAC_BOOK);
+		} else if (tab.equals(CreativeModeTabs.FUNCTIONAL_BLOCKS)) {
+			entries.addAfter(Items.CHEST, MIMIC_CHEST);
+			entries.addAfter(Items.SOUL_LANTERN, Hollowmere.SUNSTONE_LANTERN);
+			entries.addAfter(Hollowmere.SUNSTONE_LANTERN, Hollowmere.SUNSTONE_CHAIN);
+			entries.addAfter(Items.SOUL_CAMPFIRE, Hollowmere.BRICK_CHIMNEY);
+			entries.addAfter(Hollowmere.BRICK_CHIMNEY, Hollowmere.STONE_BRICK_CHIMNEY);
+		} else if (tab.equals(CreativeModeTabs.COMBAT)) {
+			entries.addAfter(Items.GOLDEN_HELMET, Hollowmere.CROWN);
+		} else if (tab.equals(CreativeModeTabs.NATURAL_BLOCKS)) {
+			entries.addAfter(Items.AMETHYST_CLUSTER, Hollowmere.SUNSTONE_CLUSTER);
+		}
+	}
+
+	public static void attributes(BiConsumer<EntityType<? extends LivingEntity>, AttributeSupplier.Builder> sink) {
+		sink.accept(MIMIC, MimicEntity.createAttributes());
+		sink.accept(Hollowmere.MOSS_KNIGHT, MossKnightEntity.createAttributes());
+		sink.accept(Hollowmere.BLACKSMITH, BlacksmithEntity.createAttributes());
+	}
+
+	public static boolean onUseBlock(Player player, Level level, InteractionHand hand, BlockPos pos) {
+		if (player.isSpectator()) {
+			return false;
+		}
+		return level instanceof ServerLevel serverLevel && springTrap(serverLevel, pos, player) || BlacksmithEntity.wakeInBed(player, level, hand, pos);
+	}
+
+	public static boolean canBreak(LevelAccessor level, Player player, BlockPos pos) {
+		return !(level instanceof ServerLevel serverLevel) || !springTrap(serverLevel, pos, player);
 	}
 
 	public static boolean isMimic(ServerLevel level, BlockPos pos, BlockState state) {
 		if (!state.is(Blocks.CHEST) || state.getValue(ChestBlock.TYPE) != ChestType.SINGLE || level.getDifficulty() == Difficulty.PEACEFUL) {
 			return false;
 		}
-		if (!(level.getBlockEntity(pos) instanceof ChestBlockEntity chest) || chest.getLootTable() == null) {
+		var lootTable = level.getBlockEntity(pos) instanceof ChestBlockEntity chest ? lootTable(chest) : null;
+		if (lootTable == null) {
 			return false;
 		}
-		ResourceKey<LootTable> lootTable = chest.getLootTable();
 		int chance = lootTable.equals(MIMIC_CHEST_LOOT) || lootTable.equals(Hollowmere.KINGS_COFFER) ? 100
 			: lootTable.equals(Hollowmere.KEEP_HOARD) ? 50
-			: PrimedChests.isPrimed(lootTable) ? level.getGameRules().get(PRIMED_MIMIC_CHANCE)
+			: PrimedChests.isPrimed(lootTable) ? percent(level, PRIMED_MIMIC_CHANCE)
 			: lootTable.equals(BuiltInLootTables.SPAWN_BONUS_CHEST) ? 0
-			: level.getGameRules().get(MIMIC_CHANCE);
+			: percent(level, MIMIC_CHANCE);
 		// seeded from world seed + position so the answer never changes between checks
 		return RandomSource.create(level.getSeed() ^ pos.asLong() * 0x9E3779B97F4A7C15L).nextInt(100) < chance;
 	}
@@ -145,20 +256,20 @@ public class Mimicry implements ModInitializer {
 		if (!isMimic(level, pos, state)) {
 			return false;
 		}
-		MimicEntity mimic = MIMIC.create(level, EntitySpawnReason.TRIGGERED);
+		MimicEntity mimic = MIMIC.create(level/*? if >=26.1 {*/, EntitySpawnReason.TRIGGERED/*?}*/);
 		if (mimic == null) {
 			return false;
 		}
 
 		ChestBlockEntity chest = (ChestBlockEntity) level.getBlockEntity(pos);
-		boolean king = Hollowmere.KINGS_COFFER.equals(chest.getLootTable());
+		boolean king = Hollowmere.KINGS_COFFER.equals(lootTable(chest));
 		chest.unpackLootTable(player);
 		for (int i = 0; i < chest.getContainerSize(); i++) {
 			mimic.getInventory().addItem(chest.removeItemNoUpdate(i));
 		}
 		float yaw = state.getValue(ChestBlock.FACING).toYRot();
 		level.removeBlock(pos, false);
-		mimic.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
+		mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
 		mimic.setYHeadRot(yaw);
 		mimic.setYBodyRot(yaw);
 		mimic.setPersistenceRequired();
@@ -170,16 +281,73 @@ public class Mimicry implements ModInitializer {
 		return true;
 	}
 
+	public static @Nullable /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable(ChestBlockEntity chest) {
+		//? if >=1.20.5 {
+		return chest.getLootTable();
+		//?} else {
+		/*// no getter for the loot table here; a chest that still has one saves only the table, not its items
+		CompoundTag tag = chest.saveWithoutMetadata();
+		return tag.contains("LootTable") ? new Identifier(tag.getString("LootTable")) : null;
+		*///?}
+	}
+
+	// NeoForged's Forge rejects Registry.register for the registries it manages, so there it goes through RegisterEvent
+	public static <V, T extends V> T register(Registry<V> registry, Identifier id, T value) {
+		//? if forge {
+		/*com.slainlight.mimicry.forge.MimicryForge.register(registry, id, value);
+		return value;
+		*///?} else {
+		return Registry.register(registry, id, value);
+		//?}
+	}
+
+	public static <V, T extends V> T register(Registry<V> registry, ResourceKey<V> key, T value) {
+		//? if forge {
+		/*return register(registry, key.location(), value);
+		*///?} else {
+		return Registry.register(registry, key, value);
+		//?}
+	}
+
 	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MOD_ID, path);
+		return /*? if >=1.21 {*/Identifier.fromNamespaceAndPath(MOD_ID, path)/*?} else {*//*new Identifier(MOD_ID, path)*//*?}*/;
 	}
 
 	static SoundEvent sound(String name) {
-		return Registry.register(BuiltInRegistries.SOUND_EVENT, id(name), SoundEvent.createVariableRangeEvent(id(name)));
+		return register(BuiltInRegistries.SOUND_EVENT, id(name), SoundEvent.createVariableRangeEvent(id(name)));
 	}
 
 	static Item item(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id(name));
-		return Registry.register(BuiltInRegistries.ITEM, key, factory.apply(properties.setId(key)));
+		return register(BuiltInRegistries.ITEM, key, factory.apply(properties/*? if >=26.1 {*/.setId(key)/*?}*/));
 	}
+
+	static Item spawnEgg(String name, EntityType<? extends Mob> type) {
+		//? if >=26.1 {
+		return item(name, SpawnEggItem::new, new Item.Properties().spawnEgg(type));
+		//?} else {
+		/*// white so the already colored egg textures are not tinted
+		return item(name, properties -> new SpawnEggItem(type, 0xFFFFFF, 0xFFFFFF, properties), new Item.Properties());
+		*///?}
+	}
+
+	public static int percent(ServerLevel level, /*? if >=26.1 {*/GameRule<Integer>/*?} else {*//*GameRules.Key<GameRules.IntegerValue>*//*?}*/ rule) {
+		return level.getGameRules()./*? if >=26.1 {*/get/*?} else {*//*getInt*//*?}*/(rule);
+	}
+
+	//? if >=26.1 {
+	private static GameRule<Integer> percentRule(String name, int defaultValue) {
+		return Registry.register(BuiltInRegistries.GAME_RULE, id(name), new GameRule<>(GameRuleCategory.MOBS, GameRuleType.INT,
+			IntegerArgumentType.integer(0, 100), GameRuleTypeVisitor::visitInteger, Codec.intRange(0, 100), i -> i, defaultValue, FeatureFlagSet.of()));
+	}
+	//?} else if fabric {
+	/*// named mimicry.<name> to match the gamerule.mimicry.<name> lang keys
+	private static GameRules.Key<GameRules.IntegerValue> percentRule(String name, int defaultValue) {
+		return GameRuleRegistry.register(MOD_ID + "." + name, GameRules.Category.MOBS, GameRuleFactory.createIntRule(defaultValue, 0, 100));
+	}
+	*///?} else {
+	/*private static GameRules.Key<GameRules.IntegerValue> percentRule(String name, int defaultValue) {
+		return GameRules.register(MOD_ID + "." + name, GameRules.Category.MOBS, GameRules.IntegerValue.create(defaultValue));
+	}
+	*///?}
 }

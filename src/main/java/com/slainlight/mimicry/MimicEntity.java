@@ -20,7 +20,9 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
+//? if >=26.1 {
 import net.minecraft.world.entity.ContainerUser;
+//?}
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntitySelector;
@@ -50,8 +52,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+//? if >=26.1 {
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+//?} else {
+/*import net.minecraft.nbt.CompoundTag;
+*///?}
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -72,6 +78,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	private static final double VACUUM_RANGE = 6.0;
 	// width of the chest model; the base hitbox is narrower so it fits past an open door
 	static final float CHEST_WIDTH = 0.875F;
+	private static final float KING_SCALE = 1.7F;
 
 	private final SimpleContainer inventory = new SimpleContainer(27) {
 		private int viewers;
@@ -82,7 +89,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		}
 
 		@Override
-		public void startOpen(ContainerUser user) {
+		public void startOpen(/*? if >=26.1 {*/ContainerUser/*?} else {*//*Player*//*?}*/ user) {
 			if (this.viewers++ == 0) {
 				MimicEntity.this.entityData.set(DATA_OPEN, true);
 				MimicEntity.this.navigation.stop();
@@ -91,7 +98,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		}
 
 		@Override
-		public void stopOpen(ContainerUser user) {
+		public void stopOpen(/*? if >=26.1 {*/ContainerUser/*?} else {*//*Player*//*?}*/ user) {
 			if (this.viewers > 0 && --this.viewers == 0) {
 				MimicEntity.this.entityData.set(DATA_OPEN, false);
 				MimicEntity.this.playSound(SoundEvents.CHEST_CLOSE, 0.5F, 0.9F + MimicEntity.this.random.nextFloat() * 0.1F);
@@ -132,7 +139,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {
-		return Animal.createAnimalAttributes()
+		return Animal./*? if >=26.1 {*/createAnimalAttributes/*?} else {*//*createMobAttributes*//*?}*/()
 			.add(Attributes.MAX_HEALTH, 20.0)
 			.add(Attributes.ATTACK_DAMAGE, 4.0)
 			.add(Attributes.MOVEMENT_SPEED, 0.27)
@@ -146,7 +153,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		this.goalSelector.addGoal(1, new FloatGoal(this));
 		this.goalSelector.addGoal(2, new SitWhenOrderedToGoal(this));
 		this.goalSelector.addGoal(3, new MimicLeap.LeapGoal(this));
-		this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 1.1, 6.0F, 2.0F));
+		this.goalSelector.addGoal(4, new FollowOwnerGoal(this, 1.1, 6.0F, 2.0F/*? if <1.21 {*//*, false*//*?}*/));
 		this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8));
 		this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
 		this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -156,9 +163,16 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		this.targetSelector.addGoal(4, new NonTameRandomTargetGoal<>(this, Player.class, false, null));
 	}
 
+	//? if >=1.20.5 {
 	@Override
 	protected void defineSynchedData(SynchedEntityData.Builder entityData) {
 		super.defineSynchedData(entityData);
+	//?} else {
+	/*@Override
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		SynchedEntityData entityData = this.entityData;
+	*///?}
 		entityData.define(DATA_DORMANT, false);
 		entityData.define(DATA_OPEN, false);
 		entityData.define(DATA_KING, false);
@@ -196,15 +210,31 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		this.entityData.set(DATA_FLIGHT, ticks);
 	}
 
+	//? if >=1.20.5 {
 	@Override
 	protected EntityDimensions getDefaultDimensions(Pose pose) {
 		EntityDimensions dimensions = super.getDefaultDimensions(pose);
+	//?} else {
+	/*// stands in for the SCALE attribute
+	@Override
+	public float getScale() {
+		return this.isKing() ? KING_SCALE : super.getScale();
+	}
+
+	@Override
+	public EntityDimensions getDimensions(Pose pose) {
+		return this.getDefaultDimensions(pose).scale(this.getScale());
+	}
+
+	private EntityDimensions getDefaultDimensions(Pose pose) {
+		EntityDimensions dimensions = this.getType().getDimensions();
+	*///?}
 		if (this.isSqueezed()) {
 			// cancel the SCALE attribute so it's back to normal mimic size
 			return dimensions.scale(1.0F / this.getScale());
 		}
 		// king uses the full chest width and squeezes to get through doors instead
-		return this.isKing() ? dimensions.scale(CHEST_WIDTH / dimensions.width(), 1.0F) : dimensions;
+		return this.isKing() ? dimensions.scale(CHEST_WIDTH / dimensions./*? if >=1.20.5 {*/width()/*?} else {*//*width*//*?}*/, 1.0F) : dimensions;
 	}
 
 	@Override
@@ -237,7 +267,9 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	}
 
 	public void crown() {
-		this.getAttribute(Attributes.SCALE).setBaseValue(1.7);
+		//? if >=1.20.5 {
+		this.getAttribute(Attributes.SCALE).setBaseValue(KING_SCALE);
+		//?}
 		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(60.0);
 		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(11.0); // 5.5 hearts unarmoured
 		this.getAttribute(Attributes.ARMOR).setBaseValue(6.0);
@@ -245,7 +277,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		this.getAttribute(Attributes.FOLLOW_RANGE).setBaseValue(32.0);
 		this.setHealth(this.getMaxHealth());
 		this.setCustomName(Component.translatable("entity.mimicry.kings_coffer"));
-		this.bossEvent = new ServerBossEvent(this.getUUID(), this.getDisplayName(), BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.NOTCHED_10);
+		this.bossEvent = new ServerBossEvent(/*? if >=26.1 {*/this.getUUID(), /*?}*/this.getDisplayName(), BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.NOTCHED_10);
 		this.entityData.set(DATA_KING, true);
 	}
 
@@ -266,8 +298,8 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	}
 
 	@Override
-	protected void customServerAiStep(ServerLevel level) {
-		super.customServerAiStep(level);
+	protected void customServerAiStep(/*? if >=1.21.2 {*/ServerLevel level/*?}*/) {
+		super.customServerAiStep(/*? if >=1.21.2 {*/level/*?}*/);
 		if (this.bossEvent != null) {
 			MimicLeap.squeeze(this);
 			this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
@@ -290,7 +322,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		double x = Mth.floor(this.getX()) + 0.5;
 		double z = Mth.floor(this.getZ()) + 0.5;
 		if (this.level().noCollision(this, this.getBoundingBox().move(x - this.getX(), 0.0, z - this.getZ()))) {
-			this.snapTo(x, this.getY(), z, yaw, 0.0F);
+			this./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(x, this.getY(), z, yaw, 0.0F);
 		} else {
 			this.setYRot(yaw);
 		}
@@ -370,7 +402,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(VACUUM_RANGE), this::wantsToEat)) {
 			if (item.distanceToSqr(mouthPos) < 1.5) {
 				int before = item.getItem().getCount();
-				InventoryCarrier.pickUpItem(level, this, this, item);
+				InventoryCarrier.pickUpItem(/*? if >=1.21.2 {*/level, /*?}*/this, this, item);
 				if (item.isRemoved() || item.getItem().getCount() < before) {
 					this.level().broadcastEntityEvent(this, EVENT_CHOMP);
 					this.playSound(Mimicry.MIMIC_GULP, 0.8F, this.getVoicePitch());
@@ -391,7 +423,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	}
 
 	@Override
-	public boolean wantsToPickUp(ServerLevel level, ItemStack itemStack) {
+	public boolean wantsToPickUp(/*? if >=1.21.2 {*/ServerLevel level, /*?}*/ItemStack itemStack) {
 		return this.inventory.canAddItem(itemStack);
 	}
 
@@ -408,7 +440,13 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 				this.playSound(Mimicry.MIMIC_GROWL, 1.5F, this.getVoicePitch());
 				return InteractionResult.FAIL;
 			} else if (treat) {
+				//? if >=1.20.5 {
 				stack.consume(1, player);
+				//?} else {
+				/*if (!player.getAbilities().instabuild) {
+					stack.shrink(1);
+				}
+				*///?}
 				this.tryToTame(player);
 			} else if (this.isDormant()) {
 				this.wake(player);
@@ -458,6 +496,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		}
 	}
 
+	//? if >=1.21.2 {
 	@Override
 	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
 		if (this.isDormant()) {
@@ -465,14 +504,23 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		}
 		return super.hurtServer(level, source, damage);
 	}
+	//?} else {
+	/*@Override
+	public boolean hurt(DamageSource source, float damage) {
+		if (this.isDormant() && !this.level().isClientSide()) {
+			this.wake(source.getEntity() instanceof LivingEntity attacker ? attacker : null);
+		}
+		return super.hurt(source, damage);
+	}
+	*///?}
 
 	@Override
-	public boolean doHurtTarget(ServerLevel level, Entity target) {
+	public boolean doHurtTarget(/*? if >=1.21.2 {*/ServerLevel level, /*?}*/Entity target) {
 		if (this.getAttack() == ATTACK_NONE) { // leap attacks animate their own bite
 			this.level().broadcastEntityEvent(this, EVENT_CHOMP);
 		}
 		this.playSound(Mimicry.MIMIC_CHOMP, 1.0F, this.getVoicePitch());
-		return super.doHurtTarget(level, target);
+		return super.doHurtTarget(/*? if >=1.21.2 {*/level, /*?}*/target);
 	}
 
 	@Override
@@ -631,11 +679,12 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	}
 
 	@Override
-	protected void dropEquipment(ServerLevel level) {
-		super.dropEquipment(level);
-		this.inventory.removeAllItems().forEach(stack -> this.spawnAtLocation(level, stack));
+	protected void dropEquipment(/*? if >=1.21.2 {*/ServerLevel level/*?}*/) {
+		super.dropEquipment(/*? if >=1.21.2 {*/level/*?}*/);
+		this.inventory.removeAllItems().forEach(stack -> this.spawnAtLocation(/*? if >=1.21.2 {*/level, /*?}*/stack));
 	}
 
+	//? if >=26.1 {
 	@Override
 	protected void addAdditionalSaveData(ValueOutput output) {
 		super.addAdditionalSaveData(output);
@@ -656,6 +705,28 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 			this.bossEvent = new ServerBossEvent(this.getUUID(), this.getDisplayName(), BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.NOTCHED_10);
 		}
 	}
+	//?} else {
+	/*@Override
+	public void addAdditionalSaveData(CompoundTag tag) {
+		super.addAdditionalSaveData(tag);
+		this.writeInventoryToTag(tag/^? if >=1.20.5 {^/, this.registryAccess()/^?}^/);
+		tag.putBoolean("Dormant", this.isDormant());
+		tag.putBoolean("King", this.bossEvent != null);
+		tag.putBoolean("Squeezed", this.isSqueezed());
+	}
+
+	@Override
+	public void readAdditionalSaveData(CompoundTag tag) {
+		super.readAdditionalSaveData(tag);
+		this.readInventoryFromTag(tag/^? if >=1.20.5 {^/, this.registryAccess()/^?}^/);
+		this.setDormant(tag.getBoolean("Dormant"));
+		this.setSqueezed(tag.getBoolean("Squeezed"));
+		if (tag.getBoolean("King")) {
+			this.entityData.set(DATA_KING, true);
+			this.bossEvent = new ServerBossEvent(this.getDisplayName(), BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.NOTCHED_10);
+		}
+	}
+	*///?}
 
 	@Override
 	protected @Nullable SoundEvent getAmbientSound() {
@@ -699,4 +770,12 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	public @Nullable AgeableMob getBreedOffspring(ServerLevel level, AgeableMob partner) {
 		return null;
 	}
+
+	//? if <1.20.5 {
+	/*// 1.20.1 has no EntityType.Builder.eyeHeight
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return dimensions.height * 0.6F / 0.875F;
+	}
+	*///?}
 }

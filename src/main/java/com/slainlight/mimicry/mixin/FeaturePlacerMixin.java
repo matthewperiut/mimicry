@@ -1,5 +1,6 @@
 package com.slainlight.mimicry.mixin;
 
+//? if >=26.3 {
 import com.slainlight.mimicry.Earthworks;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -27,3 +28,4 @@ public abstract class FeaturePlacerMixin {
 		return !Earthworks.keepsClear(feature, origin) && original.call(feature, level, generator, random, origin);
 	}
 }
+//?}

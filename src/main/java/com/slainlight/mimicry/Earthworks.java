@@ -1,5 +1,8 @@
 package com.slainlight.mimicry;
 
+//? if <26.1 {
+/*import it.unimi.dsi.fastutil.objects.ObjectLists;
+*///?}
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -10,17 +13,26 @@ import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+//? if >=26.3 {
 import net.minecraft.world.level.levelgen.densityfunction.DensityBuffer;
 import net.minecraft.world.level.levelgen.densityfunction.DensityVolume;
 import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
+//?} else {
+/*import net.minecraft.world.level.levelgen.DensityFunction;
+*///?}
 import net.minecraft.world.level.levelgen.feature.AbstractHugeMushroomFeature;
 import net.minecraft.world.level.levelgen.feature.BlockBlobFeature;
+//? if >=1.21.5 {
 import net.minecraft.world.level.levelgen.feature.FallenTreeFeature;
+//?}
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.HugeFungusFeature;
 import net.minecraft.world.level.levelgen.feature.LakeFeature;
 import net.minecraft.world.level.levelgen.feature.TreeFeature;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+//? if <26.1 {
+/*import net.minecraft.world.level.levelgen.structure.pools.JigsawJunction;
+*///?}
 
 // shapes forge ground at the noise stage (as a Beardifier) so surface rules and decoration run on the final terrain
 public final class Earthworks extends Beardifier {
@@ -46,7 +58,11 @@ public final class Earthworks extends Beardifier {
 
 	private Earthworks(Beardifier vanilla, List<WaysideForge.Grounds> grounds, ChunkAccess chunk, NoiseBasedChunkGenerator generator,
 		RandomState randomState) {
+		//? if >=26.1 {
 		super(List.of(), List.of(), null);
+		//?} else {
+		/*super(ObjectLists.<Beardifier.Rigid>emptyList().iterator(), ObjectLists.<JigsawJunction>emptyList().iterator());
+		*///?}
 		this.vanilla = vanilla;
 		this.minX = chunk.getPos().getMinBlockX() - 1;
 		this.minZ = chunk.getPos().getMinBlockZ() - 1;
@@ -82,7 +98,7 @@ public final class Earthworks extends Beardifier {
 	public static Beardifier around(Beardifier vanilla, StructureManager structures, ChunkAccess chunk, NoiseBasedChunkGenerator generator,
 		RandomState randomState) {
 		ChunkPos pos = chunk.getPos();
-		List<WaysideForge.Grounds> grounds = structures.startsForStructure(pos.x(), pos.z(), s -> s instanceof WaysideForge).stream()
+		List<WaysideForge.Grounds> grounds = structures.startsForStructure(/*? if >=26.3 {*/pos.x(), pos.z()/*?} else {*//*pos*//*?}*/, s -> s instanceof WaysideForge).stream()
 			.flatMap(start -> start.getPieces().stream())
 			.filter(piece -> piece instanceof WaysideForge.Grounds && piece.getBoundingBox().intersects(pos.getMinBlockX() - 1, pos.getMinBlockZ() - 1,
 				pos.getMaxBlockX() + 1, pos.getMaxBlockZ() + 1))
@@ -103,6 +119,7 @@ public final class Earthworks extends Beardifier {
 		return y <= this.surface[i] ? FORCE : -FORCE;
 	}
 
+	//? if >=26.3 {
 	@Override
 	public float sampleValue(SamplerContext context, int x, int y, int z) {
 		return this.vanilla.sampleValue(context, x, y, z) + this.shape(x, y, z);
@@ -126,11 +143,22 @@ public final class Earthworks extends Beardifier {
 			}
 		}
 	}
+	//?} else {
+	/*@Override
+	public double compute(DensityFunction.FunctionContext context) {
+		return this.vanilla.compute(context) + this.shape(context.blockX(), context.blockY(), context.blockZ());
+	}
+
+	@Override
+	public void fillArray(double[] output, DensityFunction.ContextProvider provider) {
+		provider.fillAllDirectly(output, this);
+	}
+	*///?}
 
 	public static void beginDecorating(StructureManager structures, ChunkPos pos) {
-		List<BoundingBox> clear = structures.startsForStructure(pos.x(), pos.z(), s -> s instanceof WaysideForge || s instanceof SunkenKeep).stream()
+		List<BoundingBox> clear = structures.startsForStructure(/*? if >=26.3 {*/pos.x(), pos.z()/*?} else {*//*pos*//*?}*/, s -> s instanceof WaysideForge || s instanceof SunkenKeep).stream()
 			.flatMap(start -> start.getPieces().stream())
-			.map(piece -> piece instanceof WaysideForge.Piece forge ? forge.getBoundingBox().inflatedBy(GLADE, 0, GLADE)
+			.map(piece -> piece instanceof WaysideForge.Piece forge ? forge.getBoundingBox().inflatedBy(GLADE/*? if >=1.20.5 {*/, 0, GLADE/*?}*/)
 				: piece instanceof SunkenKeep.TunnelPiece tunnel ? BoundingBox.fromCorners(tunnel.portal().offset(-YARD, 0, -YARD), tunnel.portal().offset(YARD, 0, YARD))
 				: null)
 			.filter(box -> box != null).toList();
@@ -143,7 +171,7 @@ public final class Earthworks extends Beardifier {
 
 	public static boolean keepsClear(Feature feature, BlockPos origin) {
 		List<BoundingBox> clear = CLEAR.get();
-		if (clear == null || !(feature instanceof TreeFeature || feature instanceof FallenTreeFeature || feature instanceof BlockBlobFeature
+		if (clear == null || !(feature instanceof TreeFeature/*? if >=1.21.5 {*/ || feature instanceof FallenTreeFeature/*?}*/ || feature instanceof BlockBlobFeature
 			|| feature instanceof AbstractHugeMushroomFeature || feature instanceof HugeFungusFeature || feature instanceof LakeFeature)) {
 			return false;
 		}

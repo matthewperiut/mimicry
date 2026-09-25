@@ -7,13 +7,18 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+//? if >=1.20.5 {
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+//?} else {
+/*import net.minecraft.world.level.chunk.ChunkStatus;
+*///?}
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
@@ -46,7 +51,7 @@ public abstract class ChunkGeneratorMixin {
 	private static BlockPos mimicry$locateForge(StructurePlacement placement, ChunkPos pos, Operation<BlockPos> original, @Local Holder<Structure> structure,
 		@Local(argsOnly = true) LevelReader level, @Local(argsOnly = true) StructureManager structures) {
 		if (structure.value() instanceof WaysideForge) {
-			StructureStart start = structures.getStartForStructure(structure.value(), level.getChunk(pos.x(), pos.z(), ChunkStatus.STRUCTURE_STARTS));
+			StructureStart start = structures.getStartForStructure(/*? if <26.3 {*//*SectionPos.of(pos, 0), *//*?}*/structure.value(), level.getChunk(pos.x/*? if >=26.1 {*/()/*?}*/, pos.z/*? if >=26.1 {*/()/*?}*/, ChunkStatus.STRUCTURE_STARTS));
 			if (start != null && start.isValid()) {
 				return start.getPieces().stream().filter(piece -> piece instanceof WaysideForge.Piece).findFirst()
 					.map(piece -> piece.getBoundingBox().getCenter().atY(piece.getBoundingBox().minY()))

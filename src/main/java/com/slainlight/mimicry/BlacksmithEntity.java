@@ -1,12 +1,15 @@
 package com.slainlight.mimicry;
 
+import com.slainlight.mimicry.platform.Platform;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+//? if >=1.20.5 {
 import net.minecraft.core.component.DataComponents;
+//?}
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -17,7 +20,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
+//? if >=26.3 {
 import net.minecraft.util.Prediction;
+//?}
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
@@ -38,18 +43,29 @@ import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.TradeWithPlayerGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+//? if >=26.1 {
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
+//?} else {
+/*import net.minecraft.world.entity.npc.AbstractVillager;
+*///?}
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+//? if >=1.20.5 {
 import net.minecraft.world.item.trading.ItemCost;
+//?}
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.properties.BedPart;
+//? if >=26.1 {
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+//?} else {
+/*import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+*///?}
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -109,10 +125,10 @@ public class BlacksmithEntity extends AbstractVillager {
 			}
 			this.awakeUntil = this.tickCount + 30 * 20;
 			this.getLookControl().setLookAt(player);
-			if (quest(serverPlayer) == 1 && serverPlayer.getInventory().getNonEquipmentItems().stream()
+			if (quest(serverPlayer) == 1 && serverPlayer.getInventory()./*? if >=1.21.5 {*/getNonEquipmentItems()/*?} else {*//*items*//*?}*/.stream()
 				.noneMatch(stack -> stack.is(Items.FILLED_MAP) && isKeepMap(stack))) {
 				// also clears blank keep maps left over from older versions
-				NonNullList<ItemStack> items = serverPlayer.getInventory().getNonEquipmentItems();
+				NonNullList<ItemStack> items = serverPlayer.getInventory()./*? if >=1.21.5 {*/getNonEquipmentItems()/*?} else {*//*items*//*?}*/;
 				items.replaceAll(stack -> isKeepMap(stack) ? ItemStack.EMPTY : stack);
 				this.give(player, Hollowmere.roll((ServerLevel) this.level(), Hollowmere.KEEP_MAP, this.position(), player));
 				this.say(player, "npc.mimicry.bram.new_map");
@@ -122,8 +138,12 @@ public class BlacksmithEntity extends AbstractVillager {
 				case 1 -> countSigils(serverPlayer) >= SIGILS_NEEDED ? "bram/sigils" : "bram/waiting";
 				default -> "bram/friend";
 			};
+			//? if >=26.1 {
 			serverPlayer.registryAccess().lookupOrThrow(Registries.DIALOG).get(ResourceKey.create(Registries.DIALOG, Mimicry.id(dialog)))
 				.ifPresent(serverPlayer::openDialog);
+			//?} else {
+			/*Platform.openDialog(serverPlayer, Mimicry.id(dialog));
+			*///?}
 		}
 		return InteractionResult.SUCCESS;
 	}
@@ -140,7 +160,7 @@ public class BlacksmithEntity extends AbstractVillager {
 		if (sleepers.isEmpty()) {
 			return false;
 		}
-		sleepers.getFirst().mobInteract(player, hand);
+		sleepers.get(0).mobInteract(player, hand);
 		return true;
 	}
 
@@ -155,7 +175,7 @@ public class BlacksmithEntity extends AbstractVillager {
 		switch (action) {
 			case "accept" -> {
 				if (quest(player) == 0) {
-					player.setAttached(Hollowmere.BRAM_QUEST, 1);
+					Platform.setQuestStage(player, 1);
 					smith.give(player, Hollowmere.roll(level, Hollowmere.KEEP_MAP, smith.position(), player));
 					smith.give(player, Hollowmere.roll(level, Hollowmere.ALMANAC, smith.position(), player));
 					smith.say(player, "npc.mimicry.bram.accepted");
@@ -163,11 +183,11 @@ public class BlacksmithEntity extends AbstractVillager {
 			}
 			case "turnin" -> {
 				if (quest(player) == 1 && countSigils(player) >= SIGILS_NEEDED) {
-					player.getInventory().clearOrCountMatchingItems(stack -> stack.is(Hollowmere.KNIGHT_SIGIL), false, SIGILS_NEEDED, player.inventoryMenu.getCraftSlots());
-					player.setAttached(Hollowmere.BRAM_QUEST, 2);
+					player.getInventory().clearOrCountMatchingItems(stack -> stack.is(Hollowmere.KNIGHT_SIGIL), /*? if >=26.3 {*/false, /*?}*/SIGILS_NEEDED, player.inventoryMenu.getCraftSlots());
+					Platform.setQuestStage(player, 2);
 					smith.give(player, Hollowmere.roll(level, Hollowmere.BRAM_REWARD, smith.position(), player));
 					player.giveExperiencePoints(60);
-					Optional.ofNullable(level.getServer().getAdvancements().get(Mimicry.id("bram_quest")))
+					Optional.ofNullable(level.getServer().getAdvancements()./*? if >=1.20.2 {*/get/*?} else {*//*getAdvancement*//*?}*/(Mimicry.id("bram_quest")))
 						.ifPresent(advancement -> player.getAdvancements().award(advancement, "done"));
 					smith.playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0F, 0.8F);
 					level.sendParticles(ParticleTypes.HAPPY_VILLAGER, smith.getX(), smith.getY() + 1.8, smith.getZ(), 12, 0.4, 0.4, 0.4, 0.0);
@@ -188,7 +208,7 @@ public class BlacksmithEntity extends AbstractVillager {
 	}
 
 	private static int quest(ServerPlayer player) {
-		return player.getAttachedOrCreate(Hollowmere.BRAM_QUEST);
+		return Platform.questStage(player);
 	}
 
 	private static int countSigils(Player player) {
@@ -196,12 +216,16 @@ public class BlacksmithEntity extends AbstractVillager {
 	}
 
 	private static boolean isKeepMap(ItemStack stack) {
+		//? if >=1.20.5 {
 		return stack.get(DataComponents.ITEM_NAME) instanceof Component name && name.getContents() instanceof TranslatableContents contents
+		//?} else {
+		/*return stack.getHoverName().getContents() instanceof TranslatableContents contents
+		*///?}
 			&& contents.getKey().equals("item.mimicry.keep_map");
 	}
 
 	private void give(Player player, List<ItemStack> stacks) {
-		stacks.forEach(stack -> player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY));
+		stacks.forEach(stack -> player.getInventory().placeItemBackInInventory(stack/*? if >=26.3 {*/, Prediction.SERVER_ONLY/*?}*/));
 	}
 
 	private void say(Player player, String key) {
@@ -209,8 +233,9 @@ public class BlacksmithEntity extends AbstractVillager {
 	}
 
 	@Override
-	protected void updateTrades(ServerLevel level) {
+	protected void updateTrades(/*? if >=26.1 {*/ServerLevel level/*?}*/) {
 		MerchantOffers offers = this.getOffers();
+		//? if >=1.20.5 {
 		offers.add(new MerchantOffer(new ItemCost(Items.IRON_INGOT, 6), new ItemStack(Items.EMERALD), 16, 2, 0.05F));
 		offers.add(new MerchantOffer(new ItemCost(Mimicry.MIMIC_TOOTH, 4), new ItemStack(Items.EMERALD), 16, 2, 0.05F));
 		offers.add(new MerchantOffer(new ItemCost(Hollowmere.KNIGHT_SIGIL, 1), new ItemStack(Items.EMERALD, 3), 12, 5, 0.05F));
@@ -218,6 +243,15 @@ public class BlacksmithEntity extends AbstractVillager {
 		offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 6), new ItemStack(Mimicry.TREASURE_LENS), 3, 10, 0.05F));
 		offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 4), Optional.of(new ItemCost(Mimicry.MIMIC_TOOTH, 2)), new ItemStack(Mimicry.MIMIC_CHEST), 4, 8, 0.05F));
 		offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 3), new ItemStack(Items.SHIELD), 8, 5, 0.05F));
+		//?} else {
+		/*offers.add(new MerchantOffer(new ItemStack(Items.IRON_INGOT, 6), new ItemStack(Items.EMERALD), 16, 2, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Mimicry.MIMIC_TOOTH, 4), new ItemStack(Items.EMERALD), 16, 2, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Hollowmere.KNIGHT_SIGIL, 1), new ItemStack(Items.EMERALD, 3), 12, 5, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Items.EMERALD, 2), new ItemStack(Hollowmere.SUNSTONE_LANTERN, 2), 12, 3, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Items.EMERALD, 6), new ItemStack(Mimicry.TREASURE_LENS), 3, 10, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Items.EMERALD, 4), new ItemStack(Mimicry.MIMIC_TOOTH, 2), new ItemStack(Mimicry.MIMIC_CHEST), 4, 8, 0.05F));
+		offers.add(new MerchantOffer(new ItemStack(Items.EMERALD, 3), new ItemStack(Items.SHIELD), 8, 5, 0.05F));
+		*///?}
 	}
 
 	@Override
@@ -259,10 +293,17 @@ public class BlacksmithEntity extends AbstractVillager {
 		this.playSound(SoundEvents.PLAYER_BIG_FALL, 1.0F, 0.8F);
 	}
 
+	//? if >=1.21.2 {
 	@Override
 	public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
 		return (!this.isKnockedOut() || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) && super.hurtServer(level, source, damage);
 	}
+	//?} else {
+	/*@Override
+	public boolean hurt(DamageSource source, float damage) {
+		return (!this.isKnockedOut() || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) && super.hurt(source, damage);
+	}
+	*///?}
 
 	@Override
 	public void tick() {
@@ -270,7 +311,7 @@ public class BlacksmithEntity extends AbstractVillager {
 		if (!this.level().isClientSide() && this.knockedOutTicks > 0 && --this.knockedOutTicks == 0) {
 			this.setPose(Pose.STANDING);
 			this.setHealth(this.getMaxHealth());
-			this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER.value(), 1.0F, 0.9F);
+			this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER/*? if >=1.20.5 {*/.value()/*?}*/, 1.0F, 0.9F);
 		}
 	}
 
@@ -287,6 +328,7 @@ public class BlacksmithEntity extends AbstractVillager {
 		}
 	}
 
+	//? if >=26.1 {
 	@Override
 	protected void addAdditionalSaveData(ValueOutput output) {
 		super.addAdditionalSaveData(output);
@@ -309,6 +351,35 @@ public class BlacksmithEntity extends AbstractVillager {
 			this.setPose(Pose.SLEEPING);
 		}
 	}
+	//?} else {
+	/*@Override
+	public void addAdditionalSaveData(CompoundTag tag) {
+		super.addAdditionalSaveData(tag);
+		if (this.anvil != null) {
+			tag.put("Anvil", NbtUtils.writeBlockPos(this.anvil));
+		}
+		if (this.bed != null) {
+			tag.put("Bed", NbtUtils.writeBlockPos(this.bed));
+		}
+		tag.putInt("KnockedOut", this.knockedOutTicks);
+	}
+
+	@Override
+	public void readAdditionalSaveData(CompoundTag tag) {
+		super.readAdditionalSaveData(tag);
+		//? if >=1.20.5 {
+		this.anvil = NbtUtils.readBlockPos(tag, "Anvil").orElse(null);
+		this.bed = NbtUtils.readBlockPos(tag, "Bed").orElse(null);
+		//?} else {
+		/^this.anvil = tag.contains("Anvil") ? NbtUtils.readBlockPos(tag.getCompound("Anvil")) : null;
+		this.bed = tag.contains("Bed") ? NbtUtils.readBlockPos(tag.getCompound("Bed")) : null;
+		^///?}
+		this.knockedOutTicks = tag.getInt("KnockedOut");
+		if (this.knockedOutTicks > 0) {
+			this.setPose(Pose.SLEEPING);
+		}
+	}
+	*///?}
 
 	@Override
 	public @Nullable AgeableMob getBreedOffspring(ServerLevel level, AgeableMob partner) {
@@ -371,7 +442,7 @@ public class BlacksmithEntity extends AbstractVillager {
 			if (--this.cooldown <= 0) {
 				this.cooldown = 24;
 				this.blows--;
-				smith.swingForAttack(InteractionHand.MAIN_HAND);
+				smith./*? if >=26.3 {*/swingForAttack/*?} else {*//*swing*//*?}*/(InteractionHand.MAIN_HAND);
 				ServerLevel level = (ServerLevel) smith.level();
 				level.playSound(null, smith.anvil, SoundEvents.ANVIL_USE, smith.getSoundSource(), 0.125F, 1.1F + smith.random.nextFloat() * 0.3F);
 				level.sendParticles(ParticleTypes.SMALL_FLAME, target.x, target.y + 1.05, target.z, 3, 0.15, 0.02, 0.15, 0.02);
@@ -403,4 +474,12 @@ public class BlacksmithEntity extends AbstractVillager {
 			}
 		}
 	}
+
+	//? if <1.20.5 {
+	/*// 1.20.1 has no EntityType.Builder.eyeHeight
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return dimensions.height * 1.62F / 1.95F;
+	}
+	*///?}
 }

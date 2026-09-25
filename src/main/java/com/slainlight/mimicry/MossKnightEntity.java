@@ -126,8 +126,8 @@ public class MossKnightEntity extends Monster {
 			if (distance > REACH + victim.getBbWidth() / 2 || distance > 0.5 && offset.dot(forward) / distance < 0.4) {
 				continue;
 			}
-			if (victim.hurtServer(level, this.damageSources().mobAttack(this), damage)) {
-				victim.knockback(0.8, -forward.x, -forward.z, this.damageSources().mobAttack(this), damage);
+			if (victim./*? if >=1.21.2 {*/hurtServer(level, /*?} else {*//*hurt(*//*?}*/this.damageSources().mobAttack(this), damage)) {
+				victim.knockback(0.8, -forward.x, -forward.z/*? if >=26.2 {*/, this.damageSources().mobAttack(this), damage/*?}*/);
 			}
 		}
 		Vec3 impact = this.position().add(forward.scale(1.9));
@@ -135,7 +135,7 @@ public class MossKnightEntity extends Monster {
 		BlockState ground = level.getBlockState(BlockPos.containing(impact).below());
 		if (!ground.isAir()) {
 			level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), impact.x, impact.y + 0.1, impact.z, 24, 0.5, 0.1, 0.5, 0.15);
-			level.playSound(null, impact.x, impact.y, impact.z, SoundEvents.MACE_SMASH_GROUND, this.getSoundSource(), 0.6F, 0.7F);
+			level.playSound(null, impact.x, impact.y, impact.z, SoundEvents./*? if >=1.21 {*/MACE_SMASH_GROUND/*?} else {*//*GENERIC_BIG_FALL*//*?}*/, this.getSoundSource(), 0.6F, 0.7F);
 		}
 	}
 
@@ -232,4 +232,12 @@ public class MossKnightEntity extends Monster {
 			}
 		}
 	}
+
+	//? if <1.20.5 {
+	/*// 1.20.1 has no EntityType.Builder.eyeHeight
+	@Override
+	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+		return dimensions.height * 1.62F / 1.95F;
+	}
+	*///?}
 }

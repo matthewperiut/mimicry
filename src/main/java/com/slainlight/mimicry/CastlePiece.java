@@ -14,7 +14,6 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSeriali
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
-import net.minecraft.world.phys.Vec3;
 
 public class CastlePiece extends TemplateStructurePiece {
 	static final Identifier TEMPLATE = Mimicry.id("castle");
@@ -29,7 +28,7 @@ public class CastlePiece extends TemplateStructurePiece {
 	}
 
 	public CastlePiece(StructureTemplateManager templates, CompoundTag tag) {
-		super(Hollowmere.KEEP_CASTLE, tag, templates, id -> settings(Rotation.valueOf(tag.getStringOr("Rot", "NONE"))));
+		super(Hollowmere.KEEP_CASTLE, tag, templates, id -> settings(Rotation.valueOf(tag./*? if >=1.21.5 {*/getStringOr("Rot", "NONE")/*?} else {*//*getString("Rot")*//*?}*/)));
 	}
 
 	// the template's gate is on its north side, so rotate its south axis (gate to donjon) onto the approach
@@ -60,21 +59,21 @@ public class CastlePiece extends TemplateStructurePiece {
 		Direction gate = this.placeSettings.getRotation().rotate(Direction.NORTH);
 		switch (marker) {
 			case "knight" -> {
-				MossKnightEntity knight = Hollowmere.MOSS_KNIGHT.create(level.getLevel(), EntitySpawnReason.STRUCTURE);
+				MossKnightEntity knight = Hollowmere.MOSS_KNIGHT.create(level.getLevel()/*? if >=1.21.2 {*/, EntitySpawnReason.STRUCTURE/*?}*/);
 				if (knight != null) {
-					knight.snapTo(Vec3.atBottomCenterOf(pos), gate.toYRot(), 0.0F);
+					knight./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos, gate.toYRot(), 0.0F);
 					knight.setYBodyRot(gate.toYRot());
 					knight.setYHeadRot(gate.toYRot());
 					knight.guard(pos);
-					knight.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.STRUCTURE, null);
+					knight.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), EntitySpawnReason.STRUCTURE, null/*? if <1.20.5 {*//*, null*//*?}*/);
 					level.addFreshEntityWithPassengers(knight);
 				}
 			}
 			case "mimic" -> {
-				MimicEntity mimic = Mimicry.MIMIC.create(level.getLevel(), EntitySpawnReason.STRUCTURE);
+				MimicEntity mimic = Mimicry.MIMIC.create(level.getLevel()/*? if >=1.21.2 {*/, EntitySpawnReason.STRUCTURE/*?}*/);
 				if (mimic != null) {
 					float yaw = gate.getClockWise().toYRot();
-					mimic.snapTo(Vec3.atBottomCenterOf(pos), yaw, 0.0F);
+					mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos, yaw, 0.0F);
 					mimic.setYBodyRot(yaw);
 					mimic.setYHeadRot(yaw);
 					mimic.setDormant(true);

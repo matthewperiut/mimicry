@@ -1,0 +1,17 @@
+license = "${license}"
+modLoader = "javafml"
+loaderVersion = "[1,)"
+
+[[mods]]
+modId = "${id}"
+displayName = "${name}"
+version = "${version}"
+authors = "${authors}"
+description = "${description}"
+${icon_key} = "assets/mimicry/icon.png"
+displayURL = "${sources_url}"
+
+[[mixins]]
+config = "${id}.mixins.json"
+
+${dependencies}

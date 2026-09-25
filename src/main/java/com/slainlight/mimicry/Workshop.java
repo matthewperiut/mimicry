@@ -1,7 +1,7 @@
 package com.slainlight.mimicry;
 
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.loader.api.FabricLoader;
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
@@ -28,17 +28,14 @@ final class Workshop {
 	private Workshop() {
 	}
 
-	static void init() {
-		if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-			return;
-		}
-		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) -> dispatcher.register(Commands.literal("mimicry")
+	static void registerCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+		dispatcher.register(Commands.literal("mimicry")
 			.then(Commands.literal("workshop").executes(context -> {
 				build(context.getSource().getLevel());
 				context.getSource().sendSuccess(() -> Component.literal("Workshop built: forge at " + FORGE_X + ", " + FORGE_Z
 					+ ", castle around " + CASTLE_X + ", " + CASTLE_Z), true);
 				return 1;
-			}))));
+			})));
 	}
 
 	// positions must match BUILDS in tools/import_workshop.py
@@ -49,7 +46,7 @@ final class Workshop {
 	}
 
 	private static void stamp(ServerLevel level, Identifier id, BlockPos origin, int below) {
-		StructureTemplate template = level.getServer().getStructureTemplateManager().getOrCreate(id);
+		StructureTemplate template = level.getServer()./*? if >=26.3 {*/getStructureTemplateManager/*?} else {*//*getStructureManager*//*?}*/().getOrCreate(id);
 		template.placeInWorld(level, origin, origin, new StructurePlaceSettings(), level.getRandom(), Block.UPDATE_CLIENTS);
 		BlockPos corner = origin.offset(-1, below, -1);
 		BlockState state = Blocks.STRUCTURE_BLOCK.defaultBlockState().setValue(StructureBlock.MODE, StructureMode.SAVE);

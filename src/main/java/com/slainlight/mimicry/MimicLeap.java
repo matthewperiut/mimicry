@@ -102,7 +102,7 @@ public final class MimicLeap {
 	private static AABB box(MimicEntity coffer, boolean shrunk, Vec3 at) {
 		EntityDimensions dimensions = coffer.getType().getDimensions();
 		float scale = coffer.getScale();
-		return (shrunk ? dimensions : dimensions.scale(MimicEntity.CHEST_WIDTH / dimensions.width() * scale, scale)).makeBoundingBox(at).deflate(1.0E-3);
+		return (shrunk ? dimensions : dimensions.scale(MimicEntity.CHEST_WIDTH / dimensions./*? if >=1.20.5 {*/width()/*?} else {*//*width*//*?}*/ * scale, scale)).makeBoundingBox(at).deflate(1.0E-3);
 	}
 
 	// king paths as a 1x2x1 body since it can shrink to fit anywhere a zombie can
@@ -317,7 +317,7 @@ public final class MimicLeap {
 				double reach = (this.coffer.getBbWidth() + target.getBbWidth()) / 2.0 + 0.7;
 				double rise = target.getY() - this.coffer.getY();
 				if (this.coffer.distanceToSqr(target.getX(), this.coffer.getY(), target.getZ()) <= reach * reach && rise > -1.0 && rise < 1.5) {
-					this.coffer.doHurtTarget(level, target);
+					this.coffer.doHurtTarget(/*? if >=1.21.2 {*/level, /*?}*/target);
 					return;
 				}
 			}
@@ -340,7 +340,7 @@ public final class MimicLeap {
 				double dz = Math.sin(angle);
 				level.sendParticles(ParticleTypes.POOF, x + dx * width * 0.5, y + 0.15, z + dz * width * 0.5, 0, dx, 0.02, dz, 0.35);
 			}
-			level.playSound(null, x, y, z, SoundEvents.MACE_SMASH_GROUND_HEAVY, this.coffer.getSoundSource(), 2.0F, 0.75F);
+			level.playSound(null, x, y, z, SoundEvents./*? if >=1.21 {*/MACE_SMASH_GROUND_HEAVY/*?} else {*//*ANVIL_LAND*//*?}*/, this.coffer.getSoundSource(), 2.0F, 0.75F);
 			this.coffer.playSound(Mimicry.MIMIC_CHOMP, 1.5F, this.coffer.getVoicePitch());
 
 			DamageSource source = this.coffer.damageSources().mobAttack(this.coffer);
@@ -348,9 +348,13 @@ public final class MimicLeap {
 			AABB area = new AABB(x - radius, y - 0.5, z - radius, x + radius, y + this.coffer.getBbHeight(), z + radius);
 			for (LivingEntity victim : level.getEntitiesOfClass(LivingEntity.class, area, this::crushes)) {
 				double reach = radius + victim.getBbWidth() / 2.0;
-				if (victim.distanceToSqr(x, victim.getY(), z) <= reach * reach && victim.hurtServer(level, source, damage)) {
-					victim.knockback(1.2, x - victim.getX(), z - victim.getZ(), source, damage);
+				if (victim.distanceToSqr(x, victim.getY(), z) <= reach * reach && victim./*? if >=1.21.2 {*/hurtServer(level, /*?} else {*//*hurt(*//*?}*/source, damage)) {
+					victim.knockback(1.2, x - victim.getX(), z - victim.getZ()/*? if >=26.2 {*/, source, damage/*?}*/);
+					//? if >=1.21 {
 					EnchantmentHelper.doPostAttackEffects(level, victim, source);
+					//?} else {
+					/*this.coffer.doEnchantDamageEffects(this.coffer, victim);
+					*///?}
 				}
 			}
 		}

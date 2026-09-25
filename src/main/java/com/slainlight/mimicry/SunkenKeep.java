@@ -1,6 +1,10 @@
 package com.slainlight.mimicry;
 
+//? if >=1.20.5 {
 import com.mojang.serialization.MapCodec;
+//?} else {
+/*import com.mojang.serialization.Codec;
+*///?}
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
@@ -10,10 +14,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.EntitySpawnReason;
+//? if >=26.2 {
 import net.minecraft.world.entity.EntityTypes;
+//?}
+//? if >=26.1 {
 import net.minecraft.world.entity.vehicle.minecart.Minecart;
+//?} else {
+/*import net.minecraft.world.entity.vehicle.Minecart;
+*///?}
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
@@ -28,7 +37,11 @@ import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.DoublePlantBlock;
 import net.minecraft.world.level.block.FallingBlock;
+//? if >=1.21.5 {
 import net.minecraft.world.level.block.FlowerBedBlock;
+//?} else {
+/*import net.minecraft.world.level.block.PinkPetalsBlock;
+*///?}
 import net.minecraft.world.level.block.GrowingPlantHeadBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LadderBlock;
@@ -64,7 +77,7 @@ import net.minecraft.world.phys.Vec3;
 // pieces are added in order (cavern, tunnel, castle) and are pure functions of position and the stored seed,
 // so each chunk can build its slice independently
 public class SunkenKeep extends Structure {
-	public static final MapCodec<SunkenKeep> CODEC = simpleCodec(SunkenKeep::new);
+	public static final /*? if >=1.20.5 {*/MapCodec/*?} else {*//*Codec*//*?}*/<SunkenKeep> CODEC = simpleCodec(SunkenKeep::new);
 	// keeps everything within 8 chunks of the start chunk (structure reference range)
 	static final int RADIUS = 40;
 	static final int WALL_HEIGHT = 18;
@@ -185,11 +198,26 @@ public class SunkenKeep extends Structure {
 		if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
 			List<Component> lines = java.util.stream.IntStream.rangeClosed(1, 4).mapToObj(i -> (Component) Component.translatable(keyPrefix + i)).toList();
 			CompoundTag tag = new CompoundTag();
+			//? if >=26.3 {
 			net.minecraft.nbt.Tag text = SignText.CODEC.encodeStart(level.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE),
 				new SignText(lines, lines, DyeColor.BLACK, false)).getOrThrow();
+			//?} else if >=1.20.5 {
+			/*Component[] array = lines.toArray(Component[]::new);
+			net.minecraft.nbt.Tag text = SignText.DIRECT_CODEC.encodeStart(level.registryAccess().createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE),
+				new SignText(array, array, DyeColor.BLACK, false)).getOrThrow();
+			*///?} else {
+			/*Component[] array = lines.toArray(Component[]::new);
+			net.minecraft.nbt.Tag text = SignText.DIRECT_CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, new SignText(array, array, DyeColor.BLACK, false)).result().orElseThrow();
+			*///?}
 			tag.put("front_text", text);
 			tag.put("back_text", text.copy()); // hanging signs are read from both sides
+			//? if >=1.21.6 {
 			sign.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag));
+			//?} else if >=1.20.5 {
+			/*sign.loadCustomOnly(tag, level.registryAccess());
+			*///?} else {
+			/*sign.load(tag);
+			*///?}
 		}
 	}
 
@@ -202,22 +230,37 @@ public class SunkenKeep extends Structure {
 	static void markShape(WorldGenLevel level, BlockPos pos, BlockState state) {
 		if (shapesToNeighbours(state) && level.getChunk(pos) instanceof net.minecraft.world.level.chunk.ProtoChunk chunk
 			&& !(chunk instanceof net.minecraft.world.level.chunk.ImposterProtoChunk)) {
-			chunk.markPosForPostProcessing(pos);
+			chunk./*? if >=26.2 {*/markPosForPostProcessing/*?} else {*//*markPosForPostprocessing*//*?}*/(pos);
 		}
 	}
 
 	static void paintArms(WorldGenLevel level, BlockPos pos) {
 		if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.BannerBlockEntity banner) {
 			net.minecraft.nbt.ListTag patterns = new net.minecraft.nbt.ListTag();
+			//? if >=1.20.5 {
 			for (String[] layer : new String[][] {{"rhombus", "yellow"}, {"circle", "green"}, {"border", "black"}, {"curly_border", "yellow"}}) {
 				CompoundTag entry = new CompoundTag();
 				entry.putString("pattern", "minecraft:" + layer[0]);
 				entry.putString("color", layer[1]);
 				patterns.add(entry);
 			}
+			//?} else {
+			/*for (String[] layer : new String[][] {{"mr", "yellow"}, {"mc", "green"}, {"bo", "black"}, {"cbo", "yellow"}}) {
+				CompoundTag entry = new CompoundTag();
+				entry.putString("Pattern", layer[0]);
+				entry.putInt("Color", DyeColor.byName(layer[1], DyeColor.WHITE).getId());
+				patterns.add(entry);
+			}
+			*///?}
 			CompoundTag tag = new CompoundTag();
-			tag.put("patterns", patterns);
+			tag.put(/*? if >=1.20.5 {*/"patterns"/*?} else {*//*"Patterns"*//*?}*/, patterns);
+			//? if >=1.21.6 {
 			banner.loadCustomOnly(net.minecraft.world.level.storage.TagValueInput.create(net.minecraft.util.ProblemReporter.DISCARDING, level.registryAccess(), tag));
+			//?} else if >=1.20.5 {
+			/*banner.loadCustomOnly(tag, level.registryAccess());
+			*///?} else {
+			/*banner.load(tag);
+			*///?}
 		}
 	}
 
@@ -295,8 +338,13 @@ public class SunkenKeep extends Structure {
 
 		public CavernPiece(CompoundTag tag) {
 			super(Hollowmere.KEEP_CAVERN, tag);
+			//? if >=1.21.5 {
 			this.cave = new Cave(tag.getIntOr("CX", 0), tag.getIntOr("CZ", 0), tag.getIntOr("Floor", 0), tag.getLongOr("Seed", 0L));
 			this.dir = Direction.from2DDataValue(tag.getIntOr("Dir", 0));
+			//?} else {
+			/*this.cave = new Cave(tag.getInt("CX"), tag.getInt("CZ"), tag.getInt("Floor"), tag.getLong("Seed"));
+			this.dir = Direction.from2DDataValue(tag.getInt("Dir"));
+			*///?}
 		}
 
 		@Override
@@ -399,7 +447,7 @@ public class SunkenKeep extends Structure {
 				BlockState plant = null;
 				BlockState upper = null;
 				if (p < 0.28F) {
-					plant = Blocks.SHORT_GRASS.defaultBlockState();
+					plant = Blocks./*? if >=1.20.3 {*/SHORT_GRASS/*?} else {*//*GRASS*//*?}*/.defaultBlockState();
 				} else if (p < 0.33F) {
 					plant = Blocks.TALL_GRASS.defaultBlockState();
 					upper = plant.setValue(DoublePlantBlock.HALF, net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER);
@@ -412,16 +460,21 @@ public class SunkenKeep extends Structure {
 					Block[] flowers = {Blocks.POPPY, Blocks.DANDELION, Blocks.AZURE_BLUET, Blocks.OXEYE_DAISY, Blocks.CORNFLOWER, Blocks.LILY_OF_THE_VALLEY, Blocks.ALLIUM};
 					plant = flowers[(int) (cave.hash(x, floor + 7, z) * flowers.length)].defaultBlockState();
 				} else if (p < 0.47F) {
+					//? if >=1.21.5 {
 					plant = Blocks.WILDFLOWERS.defaultBlockState().setValue(FlowerBedBlock.AMOUNT, 1 + (int) (cave.hash(x, floor + 3, z) * 4))
 						.setValue(FlowerBedBlock.FACING, Direction.from2DDataValue((int) (cave.hash(x, floor + 5, z) * 4)));
+					//?} else {
+					/*plant = Blocks.PINK_PETALS.defaultBlockState().setValue(PinkPetalsBlock.AMOUNT, 1 + (int) (cave.hash(x, floor + 3, z) * 4))
+						.setValue(PinkPetalsBlock.FACING, Direction.from2DDataValue((int) (cave.hash(x, floor + 5, z) * 4)));
+					*///?}
 				} else if (p < 0.49F) {
 					plant = (p < 0.48F ? Blocks.AZALEA : Blocks.FLOWERING_AZALEA).defaultBlockState();
 				} else if (p < 0.52F) {
 					plant = Blocks.MOSS_CARPET.defaultBlockState();
 				} else if (p < 0.525F) {
-					plant = Blocks.FIREFLY_BUSH.defaultBlockState();
+					plant = Blocks./*? if >=1.21.5 {*/FIREFLY_BUSH/*?} else {*//*FERN*//*?}*/.defaultBlockState();
 				} else if (p < 0.535F) {
-					plant = Blocks.BUSH.defaultBlockState();
+					plant = Blocks./*? if >=1.21.5 {*/BUSH/*?} else {*//*FERN*//*?}*/.defaultBlockState();
 				}
 				if (plant != null) {
 					this.set(level, bb, x, floor + 1, z, plant);
@@ -562,7 +615,7 @@ public class SunkenKeep extends Structure {
 						}
 						BlockState rim = h < 0.18F ? Blocks.SUGAR_CANE.defaultBlockState() : h < 0.3F
 							? Blocks.BIG_DRIPLEAF.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.from2DDataValue((int) (h * 40) & 3))
-							: h < 0.4F ? Blocks.FIREFLY_BUSH.defaultBlockState() : null;
+							: h < 0.4F ? Blocks./*? if >=1.21.5 {*/FIREFLY_BUSH/*?} else {*//*FERN*//*?}*/.defaultBlockState() : null;
 						if (rim != null) {
 							this.set(level, bb, x, ground, z, Blocks.GRASS_BLOCK.defaultBlockState());
 							this.set(level, bb, x, ground + 1, z, rim);
@@ -576,9 +629,9 @@ public class SunkenKeep extends Structure {
 			BlockPos shore = new BlockPos(px - this.dir.getStepX() * 6, Math.max(water, cave.floor(px - this.dir.getStepX() * 6, pz - this.dir.getStepZ() * 6)) + 1,
 				pz - this.dir.getStepZ() * 6);
 			if (bb.isInside(shore)) {
-				MimicEntity mimic = Mimicry.MIMIC.create(level.getLevel(), EntitySpawnReason.STRUCTURE);
+				MimicEntity mimic = Mimicry.MIMIC.create(level.getLevel()/*? if >=1.21.2 {*/, EntitySpawnReason.STRUCTURE/*?}*/);
 				if (mimic != null) {
-					mimic.snapTo(Vec3.atBottomCenterOf(shore), this.dir.toYRot(), 0.0F);
+					mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(shore, this.dir.toYRot(), 0.0F);
 					mimic.setYBodyRot(this.dir.toYRot());
 					mimic.setYHeadRot(this.dir.toYRot());
 					mimic.setDormant(true);
@@ -621,9 +674,15 @@ public class SunkenKeep extends Structure {
 
 		public TunnelPiece(CompoundTag tag) {
 			super(Hollowmere.KEEP_TUNNEL, tag);
+			//? if >=1.21.5 {
 			this.surface = tag.getIntOr("Surface", 0);
 			this.tunnel = tag.getIntOr("Tunnel", 0);
 			this.cave = new Cave(tag.getIntOr("CX", 0), tag.getIntOr("CZ", 0), tag.getIntOr("Floor", 0), tag.getLongOr("Seed", 0L));
+			//?} else {
+			/*this.surface = tag.getInt("Surface");
+			this.tunnel = tag.getInt("Tunnel");
+			this.cave = new Cave(tag.getInt("CX"), tag.getInt("CZ"), tag.getInt("Floor"), tag.getLong("Seed"));
+			*///?}
 		}
 
 		@Override
@@ -812,9 +871,9 @@ public class SunkenKeep extends Structure {
 			}
 			if (this.inChunk(bb, 8, 3)) {
 				BlockPos cart = this.getWorldPos(8, this.ly(this.groundAt(level, 8, 3) + 1), 3);
-				Minecart minecart = EntityTypes.MINECART.create(level.getLevel(), EntitySpawnReason.STRUCTURE);
+				Minecart minecart = /*? if >=26.2 {*/EntityTypes/*?} else {*//*net.minecraft.world.entity.EntityType*//*?}*/.MINECART.create(level.getLevel()/*? if >=1.21.2 {*/, EntitySpawnReason.STRUCTURE/*?}*/);
 				if (minecart != null) {
-					minecart.snapTo(Vec3.atBottomCenterOf(cart));
+					minecart./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(Vec3.atBottomCenterOf(cart));
 					level.addFreshEntity(minecart);
 				}
 			}

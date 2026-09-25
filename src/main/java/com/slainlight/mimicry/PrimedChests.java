@@ -10,7 +10,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+//? if >=1.20.5 {
 import net.minecraft.world.RandomizableContainer;
+//?} else {
+/*import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+*///?}
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Block;
@@ -26,14 +30,15 @@ public final class PrimedChests {
 	private static final int SEARCH_RADIUS = 4;
 
 	public interface PieceHook {
-		void mimicry$onLootChest(ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, ResourceKey<LootTable> lootTable);
+		void mimicry$onLootChest(ServerLevelAccessor level, BoundingBox chunkBB, RandomSource random, BlockPos pos, /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable);
 	}
 
 	private PrimedChests() {
 	}
 
-	public static boolean isPrimed(ResourceKey<LootTable> lootTable) {
-		return lootTable.identifier().getNamespace().equals(Mimicry.MOD_ID) && lootTable.identifier().getPath().startsWith("primed/");
+	public static boolean isPrimed(/*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable) {
+		Identifier id = lootTable/*? if >=26.1 {*/.identifier()/*?} else if >=1.20.5 {*//*.location()*//*?}*/;
+		return id.getNamespace().equals(Mimicry.MOD_ID) && id.getPath().startsWith("primed/");
 	}
 
 	// keeps all four neighbours in the box too, since blocks in ungenerated chunks would fool the wall check
@@ -41,15 +46,19 @@ public final class PrimedChests {
 		return pos -> pos.getX() > box.minX() && pos.getX() < box.maxX() && pos.getZ() > box.minZ() && pos.getZ() < box.maxZ() && box.isInside(pos);
 	}
 
-	public static boolean placeCompanion(ServerLevelAccessor level, RandomSource random, BlockPos origin, ResourceKey<LootTable> lootTable, Predicate<BlockPos> allowed) {
-		Identifier source = lootTable.identifier();
+	public static boolean placeCompanion(ServerLevelAccessor level, RandomSource random, BlockPos origin, /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable, Predicate<BlockPos> allowed) {
+		Identifier source = lootTable/*? if >=26.1 {*/.identifier()/*?} else if >=1.20.5 {*//*.location()*//*?}*/;
 		if (source.getNamespace().equals(Mimicry.MOD_ID)) {
 			return false;
 		}
 		ServerLevel serverLevel = level.getLevel();
+		//? if >=1.20.5 {
 		ResourceKey<LootTable> primed = ResourceKey.create(Registries.LOOT_TABLE, Mimicry.id("primed/" + source.getNamespace() + "/" + source.getPath()));
-		if (serverLevel.getGameRules().get(Mimicry.PRIMED_MIMIC_CHANCE) == 0
-			|| serverLevel.getServer().reloadableRegistries().getLootTable(primed) == LootTable.EMPTY) {
+		//?} else {
+		/*Identifier primed = Mimicry.id("primed/" + source.getNamespace() + "/" + source.getPath());
+		*///?}
+		if (Mimicry.percent(serverLevel, Mimicry.PRIMED_MIMIC_CHANCE) == 0
+			|| serverLevel.getServer()./*? if >=1.20.5 {*/reloadableRegistries/*?} else {*//*getLootData*//*?}*/().getLootTable(primed) == LootTable.EMPTY) {
 			return false;
 		}
 
@@ -68,18 +77,22 @@ public final class PrimedChests {
 			.setValue(ChestBlock.FACING, facingAwayFromWall(level, pos))
 			.setValue(ChestBlock.WATERLOGGED, level.getFluidState(pos).is(Fluids.WATER));
 		level.setBlock(pos, chest, Block.UPDATE_CLIENTS);
-		RandomizableContainer.setBlockEntityLootTable(level, random, pos, primed);
+		/*? if >=1.20.5 {*/RandomizableContainer.setBlockEntityLootTable/*?} else {*//*RandomizableContainerBlockEntity.setLootTable*//*?}*/(level, random, pos, primed);
 		return true;
 	}
 
 	// unlike StructurePiece.reorient, also handles corners and nooks
 	private static Direction facingAwayFromWall(LevelReader level, BlockPos pos) {
 		for (Direction back : Direction.Plane.HORIZONTAL) {
-			if (level.getBlockState(pos.relative(back)).isSolidRender() && !level.getBlockState(pos.relative(back.getOpposite())).isSolidRender()) {
+			if (isSolid(level, pos.relative(back)) && !isSolid(level, pos.relative(back.getOpposite()))) {
 				return back.getOpposite();
 			}
 		}
 		return Direction.NORTH;
+	}
+
+	private static boolean isSolid(LevelReader level, BlockPos pos) {
+		return level.getBlockState(pos).isSolidRender(/*? if <1.21.2 {*//*level, pos*//*?}*/);
 	}
 
 	private static boolean isGoodSpot(LevelReader level, BlockPos pos) {
@@ -98,11 +111,11 @@ public final class PrimedChests {
 			if (neighbor.is(Blocks.CHEST)) {
 				return false;
 			}
-			if (neighbor.isSolidRender()) {
+			if (isSolid(level, pos.relative(direction))) {
 				walls++;
 			}
 		}
-		boolean corridor = walls == 2 && level.getBlockState(pos.north()).isSolidRender() == level.getBlockState(pos.south()).isSolidRender();
+		boolean corridor = walls == 2 && isSolid(level, pos.north()) == isSolid(level, pos.south());
 		return walls >= 1 && walls <= 3 && !corridor;
 	}
 }
