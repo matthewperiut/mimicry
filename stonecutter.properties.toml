@@ -8,14 +8,6 @@ mod.authors = "Slainlight"
 mod.license = "MIT"
 mod.sources_url = "https://github.com/matthewperiut/mimicry"
 
-# publishing
-publish.modrinth = ""
-publish.curseforge = ""
-publish.env.mr = "CLIENT_AND_SERVER"
-publish.env.cf.client = true
-publish.env.cf.server = true
-publish.dry_run = true
-
 # loom
 loomx.loom_version = "1.17-SNAPSHOT"
 

@@ -1,11 +1,9 @@
 @file:Suppress("AvoidDuplicateDependencies")
-import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 
 plugins {
     kotlin("jvm")
     id("com.google.devtools.ksp")
     id("dev.kikugie.fletching-table.fabric")
-    id("me.modmuss50.mod-publish-plugin")
     id("dev.kikugie.loom-back-compat")
 }
 
@@ -22,16 +20,12 @@ val requiredJava: JavaVersion = when {
     else -> JavaVersion.VERSION_17
 }
 
-val compatibleVersions: List<String> = sc.properties.rawOrNull("mod", "mc_releases")
-    ?.asList().orEmpty().map { it.toString() }
-
 data class ModDep(val key: String, val version: String) {
     private fun meta(suffix: String): String? = findProperty("dep.$key.$suffix")?.toString()?.takeIf { it.isNotBlank() }
     val id: String get() = meta("id") ?: key
     val coords: String? get() = meta("coords")?.replace($$"$id", id)?.replace($$"$loader", "fabric")?.replace($$"$mc", sc.current.version)
     val base: String get() = version.substringBefore('+').substringBefore("-beta")
     val range: String get() = meta("range") ?: ">=$base"
-    fun slug(platform: String): String = meta("slug.$platform") ?: meta("slug") ?: key
 }
 
 fun deps(prefix: String) = project.ext.properties
@@ -145,35 +139,5 @@ tasks {
         inputs.property("version", project.property("mod.version"))
         from(loomx.modJar.flatMap { it.archiveFile }, loomx.modSourcesJar.flatMap { it.archiveFile })
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
-    }
-}
-
-publishMods {
-    file.set(loomx.modJar.get().archiveFile)
-    additionalFiles.from(loomx.modSourcesJar.get().archiveFile)
-    changelog.set(rootProject.file("CHANGELOG.md").readText())
-    type.set(STABLE)
-    modLoaders.add("fabric")
-    displayName = "${property("mod.version")} for Fabric ${sc.current.version}"
-    dryRun = (property("publish.dry_run") as String).toBooleanStrict()
-
-    val mrRequired = requiredDeps.map { it.slug("modrinth") }
-    val cfRequired = requiredDeps.map { it.slug("curseforge") }
-
-    modrinth {
-        projectId.set("${property("publish.modrinth")}")
-        accessToken.set(providers.environmentVariable("MR_KEY"))
-        minecraftVersions.addAll(compatibleVersions)
-        environment.set(ModrinthEnvironment.valueOf(property("publish.env.mr") as String))
-        requires(*mrRequired.toTypedArray())
-    }
-
-    curseforge {
-        projectId.set("${property("publish.curseforge")}")
-        accessToken.set(providers.environmentVariable("CF_KEY"))
-        minecraftVersions.addAll(compatibleVersions)
-        client = (property("publish.env.cf.client") as String).toBooleanStrict()
-        server = (property("publish.env.cf.server") as String).toBooleanStrict()
-        requires(*cfRequired.toTypedArray())
     }
 }

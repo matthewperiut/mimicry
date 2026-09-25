@@ -1,0 +1,95 @@
+name: publish
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: check the release matches mod.version
+        id: version
+        run: |
+          version=$(sed -n 's/^mod\.version = "\(.*\)"$/\1/p' stonecutter.properties.toml)
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::Release $GITHUB_REF_NAME doesn't match mod.version $version in stonecutter.properties.toml"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: build
+        run: chmod +x ./gradlew && ./gradlew buildAndCollect
+      - name: keep the jars
+        uses: actions/upload-artifact@v7
+        with:
+          name: jars
+          path: build/libs/${{ steps.version.outputs.version }}/
+          if-no-files-found: error
+
+  # one jar at a time, oldest Minecraft first and Fabric before Forge or NeoForge
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      MODRINTH_ID: ${{ vars.MODRINTH_ID }}
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      CURSEFORGE_ID: ${{ vars.CURSEFORGE_ID }}
+      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+      SLAINLIGHT_ID: ${{ vars.SLAINLIGHT_ID }}
+      SLAINLIGHT_TOKEN: ${{ secrets.SLAINLIGHT_TOKEN }}
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: checkout mc-publish for slainlight.com
+        uses: actions/checkout@v6
+        with:
+          repository: Kira-NT/mc-publish
+          ref: v3.3
+          path: .mc-publish
+      - name: point it at slainlight.com
+        run: sed -i 's#https://api.modrinth.com/v#https://slainlight.com/v#' .mc-publish/dist/index.js
+      - name: get the jars
+        uses: actions/download-artifact@v8
+        with:
+          name: jars
+          path: jars
+
+      - name: Fabric 1.20.1
+        uses: ./.github/actions/publish
+        with: { minecraft: '1.20.1', loader: fabric, java: 17 }
+      - name: Forge 1.20.1
+        uses: ./.github/actions/publish
+        with: { minecraft: '1.20.1', loader: forge, loaders: forge neoforge, java: 17 }
+      - name: Fabric 1.21.1
+        uses: ./.github/actions/publish
+        with: { minecraft: '1.21.1', loader: fabric, game-versions: '1.21 1.21.1', java: 21 }
+      - name: NeoForge 1.21.1
+        uses: ./.github/actions/publish
+        with: { minecraft: '1.21.1', loader: neoforge, game-versions: '1.21 1.21.1', java: 21 }
+      - name: Fabric 26.1.2
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.1.2', loader: fabric, java: 25 }
+      - name: NeoForge 26.1.2
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.1.2', loader: neoforge, java: 25 }
+      - name: Fabric 26.2
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.2', loader: fabric, java: 25 }
+      - name: NeoForge 26.2
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.2', loader: neoforge, java: 25 }
+      - name: Fabric 26.3
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.3', loader: fabric, java: 25 }
+      - name: NeoForge 26.3
+        uses: ./.github/actions/publish
+        with: { minecraft: '26.3', loader: neoforge, java: 25 }

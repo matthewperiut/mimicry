@@ -1,0 +1,60 @@
+name: publish
+description: Uploads one of the built jars to Modrinth, CurseForge and slainlight.com
+inputs:
+  minecraft:
+    description: The Minecraft version in the jar's name
+    required: true
+  loader:
+    description: fabric, forge or neoforge, as in the jar's name
+    required: true
+  loaders:
+    description: Loaders to list it under, if more than the jar's own
+    required: false
+  game-versions:
+    description: Minecraft versions to list it under, if more than the one in its name
+    required: false
+  java:
+    description: The Java version it needs
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: jar
+      shell: bash
+      env:
+        MINECRAFT: ${{ inputs.minecraft }}
+        LOADER: ${{ inputs.loader }}
+      run: |
+        case "$LOADER" in
+          fabric) label=Fabric ;;
+          forge) label=Forge ;;
+          neoforge) label=NeoForge ;;
+        esac
+        echo "file=jars/mimicry-$LOADER-$VERSION+$MINECRAFT.jar" >> "$GITHUB_OUTPUT"
+        echo "name=Mimicry $VERSION for $label $MINECRAFT" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION+$MINECRAFT-$LOADER" >> "$GITHUB_OUTPUT"
+
+    - uses: Kira-NT/mc-publish@v3.3
+      with:
+        modrinth-id: ${{ env.MODRINTH_ID }}
+        modrinth-token: ${{ env.MODRINTH_TOKEN }}
+        curseforge-id: ${{ env.CURSEFORGE_ID }}
+        curseforge-token: ${{ env.CURSEFORGE_TOKEN }}
+        files: ${{ steps.jar.outputs.file }}
+        name: ${{ steps.jar.outputs.name }}
+        version: ${{ steps.jar.outputs.version }}
+        loaders: ${{ inputs.loaders || inputs.loader }}
+        game-versions: ${{ inputs.game-versions || inputs.minecraft }}
+        java: ${{ inputs.java }}
+
+    # the copy of mc-publish the workflow pointed at slainlight.com
+    - uses: ./.mc-publish
+      with:
+        modrinth-id: ${{ env.SLAINLIGHT_ID }}
+        modrinth-token: ${{ env.SLAINLIGHT_TOKEN }}
+        files: ${{ steps.jar.outputs.file }}
+        name: ${{ steps.jar.outputs.name }}
+        version: ${{ steps.jar.outputs.version }}
+        loaders: ${{ inputs.loaders || inputs.loader }}
+        game-versions: ${{ inputs.game-versions || inputs.minecraft }}
+        java: ${{ inputs.java }}
