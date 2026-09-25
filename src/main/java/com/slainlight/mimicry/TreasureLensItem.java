@@ -49,7 +49,8 @@ public class TreasureLensItem extends Item {
 				}
 				for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
 					BlockPos pos = blockEntity.getBlockPos();
-					if (blockEntity instanceof ChestBlockEntity chest && pos.closerThan(center, RANGE) && /*? if >=1.20.5 {*/chest.getLootTable() != null/*?} else {*//*chest.saveWithoutMetadata().contains("LootTable")*//*?}*/) {
+					if (blockEntity instanceof ChestBlockEntity chest && pos.closerThan(center, RANGE) && /*? if >=1.20.5 {*/chest.getLootTable() != null/*?} else {*//*chest.saveWithoutMetadata().contains("LootTable")*//*?}*/
+						&& !KeepLoot.isUsed(player, level, pos)) {
 						mark(level, player, Mimicry.isMimic(level, pos, chest.getBlockState()) ? ParticleTypes.ANGRY_VILLAGER : ParticleTypes.WAX_ON,
 							pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5);
 					}

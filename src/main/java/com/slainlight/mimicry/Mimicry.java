@@ -25,9 +25,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 //? if >=26.1 {
@@ -64,6 +66,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 //? if >=26.1 {
@@ -225,11 +228,15 @@ public final class Mimicry {
 		if (player.isSpectator()) {
 			return false;
 		}
-		return level instanceof ServerLevel serverLevel && springTrap(serverLevel, pos, player) || BlacksmithEntity.wakeInBed(player, level, hand, pos);
+		return level instanceof ServerLevel serverLevel && (player instanceof ServerPlayer serverPlayer && KeepLoot.use(serverLevel, pos, serverPlayer)
+			|| springTrap(serverLevel, pos, player)) || BlacksmithEntity.wakeInBed(player, level, hand, pos);
 	}
 
 	public static boolean canBreak(LevelAccessor level, Player player, BlockPos pos) {
-		return !(level instanceof ServerLevel serverLevel) || !springTrap(serverLevel, pos, player);
+		if (!(level instanceof ServerLevel serverLevel)) {
+			return true;
+		}
+		return !(player instanceof ServerPlayer serverPlayer && KeepLoot.breakCopy(serverLevel, pos, serverPlayer)) && !springTrap(serverLevel, pos, player);
 	}
 
 	public static boolean isMimic(ServerLevel level, BlockPos pos, BlockState state) {
@@ -254,27 +261,16 @@ public final class Mimicry {
 		if (!isMimic(level, pos, state)) {
 			return false;
 		}
-		MimicEntity mimic = MIMIC.create(level/*? if >=26.1 {*/, EntitySpawnReason.TRIGGERED/*?}*/);
-		if (mimic == null) {
-			return false;
-		}
-
 		ChestBlockEntity chest = (ChestBlockEntity) level.getBlockEntity(pos);
 		boolean king = Hollowmere.KINGS_COFFER.equals(lootTable(chest));
 		chest.unpackLootTable(player);
-		for (int i = 0; i < chest.getContainerSize(); i++) {
-			mimic.getInventory().addItem(chest.removeItemNoUpdate(i));
+		MimicEntity mimic = burst(level, pos, state, chest);
+		if (mimic == null) {
+			return false;
 		}
-		float yaw = state.getValue(ChestBlock.FACING).toYRot();
 		level.removeBlock(pos, false);
 		if (king) {
 			breakOut(level, pos, mimic);
-		}
-		mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
-		mimic.setYHeadRot(yaw);
-		mimic.setYBodyRot(yaw);
-		mimic.setPersistenceRequired();
-		if (king) {
 			mimic.crown();
 		}
 		level.addFreshEntity(mimic);
@@ -282,16 +278,33 @@ public final class Mimicry {
 		return true;
 	}
 
+	// a mimic at the chest's position and facing, holding the loot
+	static @Nullable MimicEntity burst(ServerLevel level, BlockPos pos, BlockState state, Container loot) {
+		MimicEntity mimic = MIMIC.create(level/*? if >=26.1 {*/, EntitySpawnReason.TRIGGERED/*?}*/);
+		if (mimic == null) {
+			return null;
+		}
+		for (int i = 0; i < loot.getContainerSize(); i++) {
+			mimic.getInventory().addItem(loot.removeItemNoUpdate(i));
+		}
+		float yaw = state.getValue(ChestBlock.FACING).toYRot();
+		mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
+		mimic.setYHeadRot(yaw);
+		mimic.setYBodyRot(yaw);
+		mimic.setPersistenceRequired();
+		return mimic;
+	}
+
 	public static boolean isMimicChest(Level level, BlockPos pos) {
 		return level.getBlockEntity(pos) instanceof ChestBlockEntity chest && MIMIC_CHEST_LOOT.equals(lootTable(chest));
 	}
 
-	public static @Nullable /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable(ChestBlockEntity chest) {
+	public static @Nullable /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable(RandomizableContainerBlockEntity container) {
 		//? if >=1.20.5 {
-		return chest.getLootTable();
+		return container.getLootTable();
 		//?} else {
-		/*// no getter for the loot table here; a chest that still has one saves only the table, not its items
-		CompoundTag tag = chest.saveWithoutMetadata();
+		/*// no getter for the loot table here; a container that still has one saves only the table, not its items
+		CompoundTag tag = container.saveWithoutMetadata();
 		return tag.contains("LootTable") ? new Identifier(tag.getString("LootTable")) : null;
 		*///?}
 	}

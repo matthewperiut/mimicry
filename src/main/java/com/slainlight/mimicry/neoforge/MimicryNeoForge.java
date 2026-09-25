@@ -79,6 +79,7 @@ public final class MimicryNeoForge {
 			Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, Mimicry.TAB, Mimicry.tab(CreativeModeTab.builder()).build());
 		} else if (key.equals(NeoForgeRegistries.Keys.ATTACHMENT_TYPES)) {
 			Registry.register(NeoForgeRegistries.ATTACHMENT_TYPES, Mimicry.id("bram_quest"), Platform.BRAM_QUEST);
+			Registry.register(NeoForgeRegistries.ATTACHMENT_TYPES, Mimicry.id("keep"), Platform.KEEP);
 		} else if (key.equals(NeoForgeRegistries.Keys.GLOBAL_LOOT_MODIFIER_SERIALIZERS)) {
 			Registry.register(NeoForgeRegistries.GLOBAL_LOOT_MODIFIER_SERIALIZERS, Mimicry.id("almanac"), AlmanacLootModifier.CODEC);
 		}

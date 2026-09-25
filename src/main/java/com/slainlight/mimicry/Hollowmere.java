@@ -276,11 +276,11 @@ public final class Hollowmere {
 		if (looter != null) {
 			params.withParameter(LootContextParams.THIS_ENTITY, looter);
 		}
-		//? if >=1.20.5 {
-		return level.getServer().reloadableRegistries().getLootTable(table).getRandomItems(params.create(LootContextParamSets.CHEST), random);
-		//?} else {
-		/*return level.getServer().getLootData().getLootTable(table).getRandomItems(params.create(LootContextParamSets.CHEST), random.nextLong());
-		*///?}
+		return lootTable(level, table).getRandomItems(params.create(LootContextParamSets.CHEST), /*? if >=1.20.5 {*/random/*?} else {*//*random.nextLong()*//*?}*/);
+	}
+
+	public static LootTable lootTable(ServerLevel level, /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ table) {
+		return level.getServer()./*? if >=1.20.5 {*/reloadableRegistries/*?} else {*//*getLootData*//*?}*/().getLootTable(table);
 	}
 
 	private static Block block(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {

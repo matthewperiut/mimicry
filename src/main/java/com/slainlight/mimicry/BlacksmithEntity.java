@@ -176,6 +176,7 @@ public class BlacksmithEntity extends AbstractVillager {
 			case "accept" -> {
 				if (quest(player) == 0) {
 					Platform.setQuestStage(player, 1);
+					CastlePiece.requestRestore(player);
 					smith.give(player, Hollowmere.roll(level, Hollowmere.KEEP_MAP, smith.position(), player));
 					smith.give(player, Hollowmere.roll(level, Hollowmere.ALMANAC, smith.position(), player));
 					smith.say(player, "npc.mimicry.bram.accepted");

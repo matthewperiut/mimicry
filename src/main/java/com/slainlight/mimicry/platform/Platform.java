@@ -4,6 +4,7 @@ package com.slainlight.mimicry.platform;
 import com.mojang.serialization.Codec;
 //?}
 import com.slainlight.mimicry.Mimicry;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 //? if <26.1 {
 /*import net.minecraft.resources.Identifier;
@@ -15,8 +16,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 //?} else if neoforge {
 /*import net.neoforged.neoforge.attachment.AttachmentType;
 *///?} else {
-/*import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.saveddata.SavedData;
+/*import net.minecraft.world.level.saveddata.SavedData;
 *///?}
 
 public final class Platform {
@@ -35,6 +35,17 @@ public final class Platform {
 	public static void setQuestStage(Player player, int stage) {
 		player.setAttached(BRAM_QUEST, stage);
 	}
+
+	private static final AttachmentType<CompoundTag> KEEP = AttachmentRegistry.create(Mimicry.id("keep"),
+		builder -> builder.persistent(CompoundTag.CODEC).copyOnDeath().initializer(() -> new CompoundTag()));
+
+	public static CompoundTag keepData(Player player) {
+		return player.getAttachedOrCreate(KEEP);
+	}
+
+	// saved along with the player
+	public static void markKeepDataDirty(Player player) {
+	}
 	//?} else if neoforge {
 	/*public static final AttachmentType<Integer> BRAM_QUEST = AttachmentType.builder(() -> 0).serialize(/^? if >=26.1 {^/Codec.INT.fieldOf("stage")/^?} else {^//^Codec.INT^//^?}^/).copyOnDeath().build();
 
@@ -45,33 +56,56 @@ public final class Platform {
 	public static void setQuestStage(Player player, int stage) {
 		player.setData(BRAM_QUEST, stage);
 	}
-	*///?} else {
-	/*// no player attachments here, so stages are kept per player UUID in the overworld's saved data
-	private static final class QuestData extends SavedData {
-		private final CompoundTag stages;
 
-		private QuestData(CompoundTag stages) {
-			this.stages = stages;
+	public static final AttachmentType<CompoundTag> KEEP = AttachmentType.builder(() -> new CompoundTag())
+		.serialize(/^? if >=26.1 {^/CompoundTag.CODEC.fieldOf("data")/^?} else {^//^CompoundTag.CODEC^//^?}^/).copyOnDeath().build();
+
+	public static CompoundTag keepData(Player player) {
+		return player.getData(KEEP);
+	}
+
+	// saved along with the player
+	public static void markKeepDataDirty(Player player) {
+	}
+	*///?} else {
+	/*// no player attachments here, so player data is kept per UUID in the overworld's saved data
+	private static final class PlayerData extends SavedData {
+		private final CompoundTag players;
+
+		private PlayerData(CompoundTag players) {
+			this.players = players;
 		}
 
 		@Override
 		public CompoundTag save(CompoundTag tag) {
-			return tag.merge(this.stages);
+			return tag.merge(this.players);
 		}
 	}
 
-	private static QuestData quests(Player player) {
-		return player.getServer().overworld().getDataStorage().computeIfAbsent(QuestData::new, () -> new QuestData(new CompoundTag()), "mimicry_quests");
+	private static PlayerData data(Player player, String name) {
+		return player.getServer().overworld().getDataStorage().computeIfAbsent(PlayerData::new, () -> new PlayerData(new CompoundTag()), name);
 	}
 
 	public static int questStage(Player player) {
-		return quests(player).stages.getInt(player.getStringUUID());
+		return data(player, "mimicry_quests").players.getInt(player.getStringUUID());
 	}
 
 	public static void setQuestStage(Player player, int stage) {
-		QuestData quests = quests(player);
-		quests.stages.putInt(player.getStringUUID(), stage);
+		PlayerData quests = data(player, "mimicry_quests");
+		quests.players.putInt(player.getStringUUID(), stage);
 		quests.setDirty();
+	}
+
+	public static CompoundTag keepData(Player player) {
+		CompoundTag players = data(player, "mimicry_keep").players;
+		if (!(players.get(player.getStringUUID()) instanceof CompoundTag)) {
+			players.put(player.getStringUUID(), new CompoundTag());
+		}
+		return players.getCompound(player.getStringUUID());
+	}
+
+	public static void markKeepDataDirty(Player player) {
+		data(player, "mimicry_keep").setDirty();
 	}
 	*///?}
 

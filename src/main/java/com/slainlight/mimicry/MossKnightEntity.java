@@ -25,7 +25,15 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+//? if >=26.1 {
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+//?} else {
+/*import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+*///?}
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 // the greatsword is drawn by the renderer, not held as equipment
 public class MossKnightEntity extends Monster {
@@ -38,6 +46,9 @@ public class MossKnightEntity extends Monster {
 
 	private int swingTick = -1;
 	private int cooldown;
+	// set for keep knights, so CastlePiece can tell which posts are empty
+	private long keep;
+	private @Nullable BlockPos post;
 
 	public MossKnightEntity(EntityType<? extends MossKnightEntity> type, Level level) {
 		super(type, level);
@@ -66,11 +77,62 @@ public class MossKnightEntity extends Monster {
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
 	}
 
-	// Mob persists the home position itself
-	public void guard(BlockPos post) {
+	public void guard(BlockPos post, long keep) {
+		this.post = post;
+		this.keep = keep;
 		this.setHomeTo(post, 8);
 		this.setPersistenceRequired();
 	}
+
+	public boolean guards(long keep, BlockPos post) {
+		return this.keep == keep && post.equals(this.post);
+	}
+
+	public boolean hasPost() {
+		return this.post != null;
+	}
+
+	//? if >=26.1 {
+	@Override
+	protected void addAdditionalSaveData(ValueOutput output) {
+		super.addAdditionalSaveData(output);
+		if (this.post != null) {
+			output.store("Post", BlockPos.CODEC, this.post);
+			output.putLong("Keep", this.keep);
+		}
+	}
+
+	@Override
+	protected void readAdditionalSaveData(ValueInput input) {
+		super.readAdditionalSaveData(input);
+		this.post = input.read("Post", BlockPos.CODEC).orElse(null);
+		this.keep = input.getLongOr("Keep", 0L);
+	}
+	//?} else {
+	/*@Override
+	public void addAdditionalSaveData(CompoundTag tag) {
+		super.addAdditionalSaveData(tag);
+		if (this.post != null) {
+			tag.put("Post", NbtUtils.writeBlockPos(this.post));
+			tag.putLong("Keep", this.keep);
+		}
+	}
+
+	@Override
+	public void readAdditionalSaveData(CompoundTag tag) {
+		super.readAdditionalSaveData(tag);
+		//? if >=1.20.5 {
+		this.post = NbtUtils.readBlockPos(tag, "Post").orElse(null);
+		//?} else {
+		/^this.post = tag.contains("Post") ? NbtUtils.readBlockPos(tag.getCompound("Post")) : null;
+		^///?}
+		this.keep = tag.getLong("Keep");
+		// the home position isn't saved on these versions
+		if (this.post != null) {
+			this.setHomeTo(this.post, 8);
+		}
+	}
+	*///?}
 
 	private void startSwing() {
 		this.swingTick = 0;
