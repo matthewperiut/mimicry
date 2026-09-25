@@ -261,7 +261,12 @@ public class AlmanacScreen extends Screen {
 		if (button == InputConstants.MOUSE_BUTTON_LEFT && this.clickBook(mouseX, mouseY)) {
 			return true;
 		}
-		return super.mouseClicked(mouseX, mouseY, button);
+		boolean handled = super.mouseClicked(mouseX, mouseY, button);
+		// clicked widgets take focus here, and page buttons draw focus as a highlight that outlasts the hover
+		if (this.getFocused() instanceof PageButton) {
+			this.setFocused(null);
+		}
+		return handled;
 	}
 	*///?}
 

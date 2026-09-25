@@ -126,6 +126,15 @@ def to_1_20_1(template):
                         for p in data.value.pop('patterns')]
             data.value['Patterns'] = nbt.list_(nbt.COMPOUND, patterns)
         old_stacks(data)
+        if 'Book' in data and data['Book']['id'].value == 'mimicry:almanac':
+            data['Book'].value['tag'] = almanac_pages()
+
+
+def almanac_pages():
+    """The NBT the 1.20.1 almanac writes when it's placed on a lectern, so lecterns count its pages."""
+    page = nbt.string(json.dumps({'translate': 'item.mimicry.almanac'}, separators=(',', ':')))
+    return nbt.compound(pages=nbt.list_(nbt.STRING, [page] * 10), title=nbt.string(''), author=nbt.string('Bram of the Wayside Forge'),
+                        resolved=nbt.Tag(nbt.BYTE, 1))
 
 
 # overlay directory: the newest version the format is for, and how to get there from the previous one

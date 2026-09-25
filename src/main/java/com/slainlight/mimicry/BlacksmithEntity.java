@@ -323,6 +323,10 @@ public class BlacksmithEntity extends AbstractVillager {
 	@Override
 	public void aiStep() {
 		super.aiStep();
+		//? if <26.1 {
+		/*// only monsters advance the swing here, so his hammering wouldn't show
+		this.updateSwingTime();
+		*///?}
 		if (this.isSleeping() && !this.level().isClientSide() && this.level().isBrightOutside()) {
 			this.stopSleeping();
 		}
@@ -391,6 +395,25 @@ public class BlacksmithEntity extends AbstractVillager {
 		return false;
 	}
 
+	// the anvil can fall, be moved or be broken, so he works at the nearest real one around where it was
+	private boolean findAnvil() {
+		if (this.level().getBlockState(this.anvil).is(BlockTags.ANVIL)) {
+			return true;
+		}
+		BlockPos found = null;
+		for (BlockPos pos : BlockPos.betweenClosed(this.anvil.offset(-12, -4, -12), this.anvil.offset(12, 4, 12))) {
+			if ((found == null || pos.distSqr(this.anvil) < found.distSqr(this.anvil)) && this.level().getBlockState(pos).is(BlockTags.ANVIL)) {
+				found = pos.immutable();
+			}
+		}
+		if (found == null) {
+			return false;
+		}
+		this.anvil = found;
+		this.setHomeTo(found, 12);
+		return true;
+	}
+
 	private class SmithGoal extends Goal {
 		private int blows;
 		private int cooldown;
@@ -403,12 +426,13 @@ public class BlacksmithEntity extends AbstractVillager {
 		public boolean canUse() {
 			BlacksmithEntity smith = BlacksmithEntity.this;
 			return smith.anvil != null && !smith.isTrading() && smith.level().isBrightOutside() && smith.random.nextInt(400) == 0
-				&& Hollowmere.isNear(smith, smith.anvil, 24.0);
+				&& smith.findAnvil() && Hollowmere.isNear(smith, smith.anvil, 24.0);
 		}
 
 		@Override
 		public boolean canContinueToUse() {
-			return this.blows > 0 && !BlacksmithEntity.this.isTrading() && BlacksmithEntity.this.level().isBrightOutside();
+			return this.blows > 0 && !BlacksmithEntity.this.isTrading() && BlacksmithEntity.this.level().isBrightOutside()
+				&& BlacksmithEntity.this.level().getBlockState(BlacksmithEntity.this.anvil).is(BlockTags.ANVIL);
 		}
 
 		@Override
@@ -479,7 +503,7 @@ public class BlacksmithEntity extends AbstractVillager {
 	/*// 1.20.1 has no EntityType.Builder.eyeHeight
 	@Override
 	protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
-		return dimensions.height * 1.62F / 1.95F;
+		return dimensions.height * 1.62F / 1.8F;
 	}
 	*///?}
 }

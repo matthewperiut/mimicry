@@ -135,7 +135,7 @@ public class MossKnightEntity extends Monster {
 		BlockState ground = level.getBlockState(BlockPos.containing(impact).below());
 		if (!ground.isAir()) {
 			level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, ground), impact.x, impact.y + 0.1, impact.z, 24, 0.5, 0.1, 0.5, 0.15);
-			level.playSound(null, impact.x, impact.y, impact.z, SoundEvents./*? if >=1.21 {*/MACE_SMASH_GROUND/*?} else {*//*GENERIC_BIG_FALL*//*?}*/, this.getSoundSource(), 0.6F, 0.7F);
+			level.playSound(null, impact.x, impact.y, impact.z, /*? if >=1.21 {*/SoundEvents.MACE_SMASH_GROUND/*?} else {*//*Mimicry.MACE_SMASH_GROUND*//*?}*/, this.getSoundSource(), 0.6F, 0.7F);
 		}
 	}
 

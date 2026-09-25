@@ -270,7 +270,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		//? if >=1.20.5 {
 		this.getAttribute(Attributes.SCALE).setBaseValue(KING_SCALE);
 		//?}
-		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(60.0);
+		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(120.0);
 		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(11.0); // 5.5 hearts unarmoured
 		this.getAttribute(Attributes.ARMOR).setBaseValue(6.0);
 		this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
@@ -333,7 +333,7 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 	public void wake(@Nullable LivingEntity target) {
 		this.setDormant(false);
 		this.idleTicks = 0;
-		if (target != null) {
+		if (target != null && this.canAttack(target)) {
 			this.setTarget(target);
 		}
 		this.playSound(Mimicry.MIMIC_REVEAL, 1.0F, this.getVoicePitch());
@@ -456,8 +456,8 @@ public class MimicEntity extends TamableAnimal implements InventoryCarrier {
 		} else if (!this.isOwnedBy(player)) {
 			return super.mobInteract(player, hand);
 		} else if (healing(stack) > 0 && this.getHealth() < this.getMaxHealth()) {
-			this.usePlayerItem(player, hand, stack);
 			this.heal(healing(stack));
+			this.usePlayerItem(player, hand, stack);
 			this.playSound(Mimicry.MIMIC_GULP, 1.0F, this.getVoicePitch());
 			this.level().broadcastEntityEvent(this, EVENT_CHOMP);
 			this.level().broadcastEntityEvent(this, (byte) 7);

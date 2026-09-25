@@ -158,7 +158,7 @@ public final class MimicLeap {
 		@Override
 		public boolean canUse() {
 			LivingEntity target = this.coffer.getTarget();
-			return !this.coffer.isDormant() && target != null && target.isAlive();
+			return !this.coffer.isDormant() && target != null && target.isAlive() && this.coffer.canAttack(target);
 		}
 
 		@Override
@@ -340,7 +340,7 @@ public final class MimicLeap {
 				double dz = Math.sin(angle);
 				level.sendParticles(ParticleTypes.POOF, x + dx * width * 0.5, y + 0.15, z + dz * width * 0.5, 0, dx, 0.02, dz, 0.35);
 			}
-			level.playSound(null, x, y, z, SoundEvents./*? if >=1.21 {*/MACE_SMASH_GROUND_HEAVY/*?} else {*//*ANVIL_LAND*//*?}*/, this.coffer.getSoundSource(), 2.0F, 0.75F);
+			level.playSound(null, x, y, z, /*? if >=1.21 {*/SoundEvents.MACE_SMASH_GROUND_HEAVY/*?} else {*//*Mimicry.MACE_SMASH_GROUND_HEAVY*//*?}*/, this.coffer.getSoundSource(), 2.0F, 0.75F);
 			this.coffer.playSound(Mimicry.MIMIC_CHOMP, 1.5F, this.coffer.getVoicePitch());
 
 			DamageSource source = this.coffer.damageSources().mobAttack(this.coffer);

@@ -57,7 +57,7 @@ public class BlacksmithRenderer extends HumanoidMobRenderer<BlacksmithEntity, /*
 		super.extractRenderState(smith, state, partialTicks);
 		if (!smith.hasPose(Pose.SLEEPING)) {
 			if (this.hammer.isEmpty()) {
-				this.hammer = new ItemStack(Items.STONE_AXE);
+				this.hammer = new ItemStack(Items.IRON_AXE);
 			}
 			this.itemModelResolver.updateForLiving(state.rightHandItemState, this.hammer, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, smith);
 			state.rightHandItemStack = this.hammer;
@@ -67,7 +67,7 @@ public class BlacksmithRenderer extends HumanoidMobRenderer<BlacksmithEntity, /*
 	//?} else {
 	/*private ItemStack hammer() {
 		if (this.hammer.isEmpty()) {
-			this.hammer = new ItemStack(Items.STONE_AXE);
+			this.hammer = new ItemStack(Items.IRON_AXE);
 		}
 		return this.hammer;
 	}

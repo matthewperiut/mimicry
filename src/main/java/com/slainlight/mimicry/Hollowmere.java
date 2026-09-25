@@ -177,7 +177,8 @@ public final class Hollowmere {
 			MOSS_KNIGHT = entity("moss_knight",
 				EntityType.Builder.of(MossKnightEntity::new, MobCategory.MONSTER).sized(0.6F, 1.95F)/*? if >=1.20.5 {*/.eyeHeight(1.62F)/*?}*/.clientTrackingRange(8));
 			BLACKSMITH = entity("blacksmith",
-				EntityType.Builder.of(BlacksmithEntity::new, MobCategory.MISC).sized(0.6F, 1.95F)/*? if >=1.20.5 {*/.eyeHeight(1.62F)/*?}*/.clientTrackingRange(10));
+				// player height, so a carpet under a two-block doorway doesn't block him
+				EntityType.Builder.of(BlacksmithEntity::new, MobCategory.MISC).sized(0.6F, 1.8F)/*? if >=1.20.5 {*/.eyeHeight(1.62F)/*?}*/.clientTrackingRange(10));
 		//? if >=1.20.5 && <26.1 {
 		/*} else if (registry.equals(Registries.ARMOR_MATERIAL)) {
 			ArmorMaterial gold = ArmorMaterials.GOLD.value();
@@ -212,8 +213,8 @@ public final class Hollowmere {
 			//?} else {
 			/*ALMANAC_BOOK = Mimicry.item("almanac", AlmanacItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
 			*///?}
-			MOSS_KNIGHT_SPAWN_EGG = Mimicry.spawnEgg("moss_knight_spawn_egg", MOSS_KNIGHT);
-			BLACKSMITH_SPAWN_EGG = Mimicry.spawnEgg("blacksmith_spawn_egg", BLACKSMITH);
+			MOSS_KNIGHT_SPAWN_EGG = Mimicry.spawnEgg("moss_knight_spawn_egg", () -> MOSS_KNIGHT);
+			BLACKSMITH_SPAWN_EGG = Mimicry.spawnEgg("blacksmith_spawn_egg", () -> BLACKSMITH);
 		} else if (registry.equals(Registries.BLOCK_ENTITY_TYPE)) {
 			CHIMNEY = Mimicry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, Mimicry.id("chimney"),
 				//? if <26.1 {

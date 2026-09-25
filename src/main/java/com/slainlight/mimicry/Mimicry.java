@@ -59,8 +59,10 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
@@ -107,6 +109,11 @@ public final class Mimicry {
 	public static SoundEvent MIMIC_BURP;
 	public static SoundEvent MIMIC_HOP;
 	public static SoundEvent MIMIC_BREATHE;
+	//? if <1.21 {
+	/*// the mace's sounds, which 1.20.1 lacks; MaceSounds supplies the files
+	public static SoundEvent MACE_SMASH_GROUND;
+	public static SoundEvent MACE_SMASH_GROUND_HEAVY;
+	*///?}
 
 	public static EntityType<MimicEntity> MIMIC;
 
@@ -130,6 +137,10 @@ public final class Mimicry {
 			MIMIC_BURP = sound("entity.mimic.burp");
 			MIMIC_HOP = sound("entity.mimic.hop");
 			MIMIC_BREATHE = sound("entity.mimic.breathe");
+			//? if <1.21 {
+			/*MACE_SMASH_GROUND = sound("item.mace.smash_ground");
+			MACE_SMASH_GROUND_HEAVY = sound("item.mace.smash_ground_heavy");
+			*///?}
 		} else if (registry.equals(Registries.ENTITY_TYPE)) {
 			ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id("mimic"));
 			// update every tick so leaps render smoothly; zombie width so it fits through doors
@@ -138,23 +149,10 @@ public final class Mimicry {
 		} else if (registry.equals(Registries.ITEM)) {
 			MIMIC_TOOTH = item("mimic_tooth", Item::new, new Item.Properties());
 			TREASURE_LENS = item("treasure_lens", TreasureLensItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
-			//? if >=1.20.5 {
-			MIMIC_CHEST = item("mimic_chest", properties -> new BlockItem(Blocks.CHEST, properties),
-				new Item.Properties().rarity(Rarity.UNCOMMON).component(DataComponents.CONTAINER_LOOT, new SeededContainerLoot(MIMIC_CHEST_LOOT, 0L))
-					/*? if >=26.1 {*/.component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.CONTAINER_LOOT, true))/*?}*/);
-			//?} else {
-			/*// no default item data here, so every stack without block entity data places a chest with the mimic loot table
-			MIMIC_CHEST = item("mimic_chest", properties -> new BlockItem(Blocks.CHEST, properties) {
-				@Override
-				protected boolean updateCustomBlockEntityTag(BlockPos pos, Level level, @Nullable Player player, ItemStack stack, BlockState state) {
-					if (getBlockEntityData(stack) == null && level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
-						chest.setLootTable(MIMIC_CHEST_LOOT, 0L);
-					}
-					return super.updateCustomBlockEntityTag(pos, level, player, stack, state);
-				}
-			}, new Item.Properties().rarity(Rarity.UNCOMMON));
-			*///?}
-			MIMIC_SPAWN_EGG = spawnEgg("mimic_spawn_egg", MIMIC);
+			MIMIC_CHEST = item("mimic_chest", MimicChestItem::new, new Item.Properties().rarity(Rarity.UNCOMMON)
+				/*? if >=1.20.5 {*/.component(DataComponents.CONTAINER_LOOT, new SeededContainerLoot(MIMIC_CHEST_LOOT, 0L))/*?}*/
+				/*? if >=26.1 {*/.component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.CONTAINER_LOOT, true))/*?}*/);
+			MIMIC_SPAWN_EGG = spawnEgg("mimic_spawn_egg", () -> MIMIC);
 		//? if >=26.1 {
 		} else if (registry.equals(Registries.GAME_RULE)) {
 			MIMIC_CHANCE = percentRule("mimic_chance", 10);
@@ -269,6 +267,9 @@ public final class Mimicry {
 		}
 		float yaw = state.getValue(ChestBlock.FACING).toYRot();
 		level.removeBlock(pos, false);
+		if (king) {
+			breakOut(level, pos, mimic);
+		}
 		mimic./*? if >=26.1 {*/snapTo/*?} else {*//*moveTo*//*?}*/(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0.0F);
 		mimic.setYHeadRot(yaw);
 		mimic.setYBodyRot(yaw);
@@ -279,6 +280,10 @@ public final class Mimicry {
 		level.addFreshEntity(mimic);
 		mimic.wake(player);
 		return true;
+	}
+
+	public static boolean isMimicChest(Level level, BlockPos pos) {
+		return level.getBlockEntity(pos) instanceof ChestBlockEntity chest && MIMIC_CHEST_LOOT.equals(lootTable(chest));
 	}
 
 	public static @Nullable /*? if >=1.20.5 {*/ResourceKey<LootTable>/*?} else {*//*Identifier*//*?}*/ lootTable(ChestBlockEntity chest) {
@@ -309,6 +314,21 @@ public final class Mimicry {
 		//?}
 	}
 
+	// the King's Coffer bursts out of its throne: the 3x3 around it, from its own layer up two, breaks as if mined with a pickaxe
+	private static void breakOut(ServerLevel level, BlockPos chest, MimicEntity king) {
+		ItemStack pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
+		for (BlockPos pos : BlockPos.betweenClosed(chest.offset(-1, 0, -1), chest.offset(1, 2, 1))) {
+			BlockState state = level.getBlockState(pos);
+			if (state.isAir() || state.getBlock() instanceof LiquidBlock || state.getDestroySpeed(level, pos) < 0) {
+				continue;
+			}
+			if (!state.requiresCorrectToolForDrops() || pickaxe.isCorrectToolForDrops(state)) {
+				Block.dropResources(state, level, pos, state.hasBlockEntity() ? level.getBlockEntity(pos) : null, king, pickaxe);
+			}
+			level.destroyBlock(pos, false, king);
+		}
+	}
+
 	public static Identifier id(String path) {
 		return /*? if >=1.21 {*/Identifier.fromNamespaceAndPath(MOD_ID, path)/*?} else {*//*new Identifier(MOD_ID, path)*//*?}*/;
 	}
@@ -322,12 +342,15 @@ public final class Mimicry {
 		return register(BuiltInRegistries.ITEM, key, factory.apply(properties/*? if >=26.1 {*/.setId(key)/*?}*/));
 	}
 
-	static Item spawnEgg(String name, EntityType<? extends Mob> type) {
+	// a supplier because Forge 1.20.1 fills the item registry before the entity type one
+	static Item spawnEgg(String name, java.util.function.Supplier<EntityType<? extends Mob>> type) {
 		//? if >=26.1 {
-		return item(name, SpawnEggItem::new, new Item.Properties().spawnEgg(type));
-		//?} else {
+		return item(name, SpawnEggItem::new, new Item.Properties().spawnEgg(type.get()));
+		//?} else if forge {
 		/*// white so the already colored egg textures are not tinted
-		return item(name, properties -> new SpawnEggItem(type, 0xFFFFFF, 0xFFFFFF, properties), new Item.Properties());
+		return item(name, properties -> new net.minecraftforge.common.ForgeSpawnEggItem(type, 0xFFFFFF, 0xFFFFFF, properties), new Item.Properties());
+		*///?} else {
+		/*return item(name, properties -> new SpawnEggItem(type.get(), 0xFFFFFF, 0xFFFFFF, properties), new Item.Properties());
 		*///?}
 	}
 

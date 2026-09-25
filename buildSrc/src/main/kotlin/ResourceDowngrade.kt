@@ -23,8 +23,6 @@ class ResourceDowngrade(private val version: String) {
         "minecraft:copper_chestplate" to "minecraft:chainmail_chestplate",
         "minecraft:copper_sword" to "minecraft:stone_sword",
     )
-    // and items added in 1.21, for 1.20.1
-    private val items121 = mapOf("minecraft:mace" to "minecraft:iron_axe")
 
     fun run(resources: File) {
         if (!before("26.3")) return
@@ -118,6 +116,9 @@ class ResourceDowngrade(private val version: String) {
                     else -> add(key, loot(value))
                 }
             }
+            // before 26.3 exploration_map only turns a blank map into a filled one
+            val explores = getAsJsonArray("functions")?.any { it.asJsonObject["function"]?.asString == "minecraft:exploration_map" } == true
+            if (explores && get("name")?.asString == "minecraft:filled_map") addProperty("name", "minecraft:map")
         }
         else -> element
     }
@@ -172,8 +173,7 @@ class ResourceDowngrade(private val version: String) {
     private fun renameItems(element: JsonElement): JsonElement = when {
         element.isJsonArray -> array(element.asJsonArray.map(::renameItems))
         element.isJsonObject -> JsonObject().apply { element.asJsonObject.entrySet().forEach { (key, value) -> add(key, renameItems(value)) } }
-        element.isJsonPrimitive && element.asJsonPrimitive.isString ->
-            (newerItems[element.asString] ?: items121[element.asString]?.takeIf { before("1.21") })?.let(::JsonPrimitive) ?: element
+        element.isJsonPrimitive && element.asJsonPrimitive.isString -> newerItems[element.asString]?.let(::JsonPrimitive) ?: element
         else -> element
     }
 
